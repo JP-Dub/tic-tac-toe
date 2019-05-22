@@ -11,7 +11,7 @@ export class App extends Component{
       this.state = {
         player  : '',
         computer: '',
-        playerWins: false,
+        playsFirst: false,
         preventClicks: false,
       }
 
@@ -86,6 +86,8 @@ export class App extends Component{
         }, 8);
       };
       this.removeAnimation();
+
+      if(this.state.playerWins) setTimeout(this.cpuHandler, 800);
   
     }  
 
@@ -112,16 +114,30 @@ export class App extends Component{
     }
 
     gameLog(logPlayer, logTileId) {
+
       const resetGame = () => {
-        this.startAnimation();
+        // set tiles to default
+        let tiles = document.getElementsByClassName('tile');
+
+        for(let i = 0; i < tiles.length; i++) {
+          tiles[i].innerHTML = "";
+          tiles[i].style.cssText += 'color: white; text-shadow: 2px 0 2px lime';
+        }
+
+        this.startAnimation(); // allow player to select new icon
+
         this.setState({
           player  : '',
           computer: '',
-          playerWins: false,
+          playsFirst: false, // plan to rm from reset or change to variable
           preventClicks: false,
         });
       };
-      const evaluateGameStatus = () => {};
+
+      const evaluateGameStatus = () => {
+
+        setTimeout(this.cpuHandler, 800);
+      };
 
 
       this.setState({
@@ -131,11 +147,22 @@ export class App extends Component{
       
       this.tilesRemain.splice( this.tilesRemain.indexOf(parseInt(logTileId)), 1);   
       this.recordTiles[logTileId] = logPlayer;
-      
-      
-      
 
-      console.log(logTileId, this.recordTiles, this.tilesRemain, this.tilesRemain.indexOf(logTileId))
+      let playsRemain = this.tilesRemain.length;
+
+      if(!playsRemain) return resetGame();
+
+      if(playsRemain <= 4) {
+        evaluateGameStatus();
+      } else {
+        setTimeout(this.cpuHandler, 800);
+      }
+      
+      console.log(this.recordTiles, this.tilesRemain)
+    }
+
+    cpuHandler(suggest) {
+      console.log('...waiting for instruction')
     }
     
 

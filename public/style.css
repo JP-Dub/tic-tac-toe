@@ -4,7 +4,7 @@ html {
   }
   
    body {
-    background: darkgrey url("/public/image/background.jpg") no-repeat center;
+    background: darkgrey url("./image/background.jpg") no-repeat center;
       /*url(https://mnjmpg.by.files.1drv.com/y4memdjzzM6brK1mbiZ7Jgr2LVUR03QQHPG91QkIN5-CVCWHvGS1KiSFloXHym4vHPvKJwm40yMDHuR1o2fAZT6_A7pBCwk5EwhuWqrD3gMNOvs9qb9A2nwgQyVA2i9LnYrAk_mTm2X0BASIiL30OsUCDJhjlPkQqPuAl15v1uY-SPef6WAgpIBprlSVTcfVgnawdm47dhJA3kltUTEY9eylQ?width=1920&height=1080&cropmode=none)no-repeat center;*/
     
     -webkit-background-size: 1920px 1080px;

@@ -40,7 +40,6 @@ html {
   }
   
  #selectPlayer {
-    /* margin-top: 0; */
     position: relative;
     line-height: 0;
     margin-left: auto;
@@ -164,7 +163,7 @@ html {
   }
   .tile {
     width: 1.125em; 
-    height: 1.125em; 
+    height: 1.12em; 
   }  
 }
 
@@ -174,7 +173,7 @@ html {
     font-size: 14px !important;
   }
   .tile {
-    width: 1.13em; 
+    width: 1.131em; 
     height: 1.13em; 
   }
 }
@@ -184,12 +183,7 @@ html {
   body {
     font-size: 16px !important;
   }
-}
-
-/* Extra large devices (large desktops, 1200px and up)  
-@media (min-width: 1200px) { 
-  body {
-    font-size: 18px !important;
+  table {
+    padding-left: 1px;
   }
 }
-*/

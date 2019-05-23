@@ -8,28 +8,25 @@ html {
   
    body {
     background: darkgrey url("./image/background.jpg") no-repeat center/1920px 1080px;    
-    /* -webkit-background-size: 1920px 1080px;
-       -moz-background-size: 1920px 1080px;
-         -o-background-size: 1920px 1080px;
-    background-size: 1920px 1080px; */
     height: 95vh;
     width: 95vw;
   }
   
   #title {
     margin: auto;
-    margin-top: 1.875em; /*30px;*/
+    margin-top: 1.875em; 
     line-height: 0;
     border: 1px solid #404040;
     background-color: #666;
-    width: 31em;/*500px;*/
-    padding-bottom: .625em; /*10px;*/
+    width: 31em;
+    padding-bottom: .625em; 
     -webkit-box-shadow: -1px -2px 10px 4px #404040 inset;
        -moz-box-shadow: -1px -2px 10px 4px #404040 inset;
     box-shadow: -1px -2px 10px 4px #404040 inset;
-    -webkit-border-radius: 3%;
-       -moz-border-radius: 3%;
-    border-radius: 3%;
+    -webkit-border-radius: 1em;
+       -moz-border-radius: 1em;
+    border-radius: 1em;
+    border: 1px solid white;
   }
   
   h1 {
@@ -43,21 +40,21 @@ html {
   }
   
  #selectPlayer {
-    margin-top: 0;
+    /* margin-top: 0; */
     position: relative;
     line-height: 0;
     margin-left: auto;
     margin-right: auto;
-    font-size: 1.75em; /*28px;*/
+    font-size: 1.75em; 
     color: white;
     text-align: center;
-    width: 21em; /*340px;*/
-    height: 5em; /*110px;*/
+    width: 21em; 
+    height: 5em; 
     z-index: -1;
   }
   
   button {
-    font-size: 1.25em; /*28px;*/
+    font-size: 1em; 
     color: white;
     text-shadow: 2px 2px 2px black;
     cursor: pointer;
@@ -85,14 +82,14 @@ html {
   }
   
   #addSpace {
-    width: .5em; /*8px;*/
+    width: .5em; 
     display: inline-block;
   }
   
  #background {
-    margin-top: -4em;
-    width: 31em; /* 500px;*/
-    height: 31em; /*500px;*/
+    margin-top: 0em;
+    width: 31em; 
+    height: 31em; 
     border: 1px solid #404040;
     background-color: #666;
     position: relative;
@@ -101,24 +98,31 @@ html {
     -webkit-box-shadow: -2px -3px 20px 14px #404040 inset;
        -moz-box-shadow: -2px -3px 20px 14px #404040 inset;
     box-shadow: -2px -3px 20px 14px #404040 inset;
-    border-radius: 3%;
+    -webkit-border-radius: 1em;
+       -moz-border-radius: 1em;    
+    border-radius: 1em;
+    border: 1px solid white;
   }
   
  #board {
-    width: 28em; /*450px;*/
-    height: 28em; /*450px;*/
+    width: 28em; 
+    height: 28em; 
     position: absolute;
     top: 50%;
     left: 50%;
     -ms-transform: translateX(-50%) translateY(-50%);
             -webkit-transform: translate(-50%, -50%);
     transform: translate(-50%, -50%);
+    border: 1px solid white;
+    -webkit-border-radius: .5em;
+       -moz-border-radius: .5em;    
+    border-radius: .5em;
   }
   
   .tile {
     display: inline-block;
-    width: 1.14em; /*145px;*/
-    height: 1.14em; /*145px;*/
+    width: 1.14em; 
+    height: 1.14em; 
     cursor: pointer;
     -webkit-box-shadow: -1px -2px 10px 4px #404040 inset;
        -moz-box-shadow: -1px -2px 10px 4px #404040 inset;
@@ -147,6 +151,10 @@ html {
   body {
     font-size: 10px !important;
   }
+  .tile {
+    width: 1.115em; 
+    height: 1.115em; 
+  }  
 }
 
 /* Small devices (landscape phones, 576px and up)  */
@@ -155,8 +163,8 @@ html {
     font-size: 12px !important;
   }
   .tile {
-    width: 1.13em; /*145px;*/
-    height: 1.13em; /*145px;*/
+    width: 1.125em; 
+    height: 1.125em; 
   }  
 }
 
@@ -166,8 +174,8 @@ html {
     font-size: 14px !important;
   }
   .tile {
-    width: 1.134em; /*145px;*/
-    height: 1.134em; /*145px;*/
+    width: 1.13em; 
+    height: 1.13em; 
   }
 }
 

@@ -19,20 +19,22 @@ export class App extends Component{
     
     componentDidMount() {
       this.startAnimation = () => {
+        // starts selectPlayer behind Title 
         this.player = document.getElementById('selectPlayer');
-        this.player.style.marginTop = '-100px'
-        let num = -100;
+        this.player.style.marginTop = '-3.55em'
+        let num = -3.55;
         
         // animation for selecting player icon
         this.startAnimate = setInterval(() => {
-          this.player.style.marginTop = num + 'px';    
-          if( this.player.style.marginTop === '0px') { 
+          this.player.style.marginTop = num.toFixed(2) + 'em';  
+          if( num.toFixed(2) >= 0.00) { 
             this.player.style.zIndex = '1'; 
             return clearInterval(this.startAnimate);     
           }
-          num++;    
+          num += .05;    
         }, 8);
       };
+      
       this.startAnimation();
       
       // highlights tiles under mouse cursor
@@ -80,9 +82,9 @@ export class App extends Component{
         this.player.style.zIndex = '-1';
 
         this.endAnimate = setInterval( () => {
-          this.player.style.marginTop = num + 'px';
-          if(this.player.style.marginTop === '-100px') return clearInterval(this.endAnimate);
-          num--;
+          this.player.style.marginTop = num.toFixed(2) + 'em';
+          if( num.toFixed(2) <= -3.55) return clearInterval(this.endAnimate);
+          num -= .05;
         }, 8);
       };
       this.removeAnimation();

@@ -11,7 +11,7 @@ export class App extends Component{
       this.state = {
         player  : '',
         computer: '',
-        playsFirst: false,
+        playsFirst: true, // firstMove, goesFirst, movesFirst, startsFirst, playerStarts, winnerStarts, winnerMovesFirst, winnersFirst
         preventClicks: false,
       }
 
@@ -89,11 +89,14 @@ export class App extends Component{
       };
       this.removeAnimation();
 
-      if(this.state.playerWins) setTimeout(this.cpuHandler, 800);
-  
-    }  
+      if(!this.state.playsFirst) {
+        this.setState({preventClicks : true}); // validate importance/necessasity
+        setTimeout(this.cpuHandler, 800);
+      } 
 
-    // manage mouse clicks
+    } 
+
+    // handle mouse clicks
     clickHandler(evt) {
       evt.preventDefault();
 
@@ -114,7 +117,8 @@ export class App extends Component{
       }
       
     }
-
+    
+    // handle cpu and player movements
     gameLog(logPlayer, logTileId) {
 
       const resetGame = () => {
@@ -157,18 +161,194 @@ export class App extends Component{
       if(playsRemain <= 4) {
         evaluateGameStatus();
       } else {
-        setTimeout(this.cpuHandler, 800);
+        setTimeout(() => {
+          this.cpuHandler(this.recordTiles, this.tilesRemain)
+        }, 800);
       }
       
-      console.log(this.recordTiles, this.tilesRemain)
+      //console.log(this.recordTiles, this.tilesRemain)
     }
 
-    cpuHandler(suggest) {
+    // handle cpu response to player 
+    cpuHandler(record, remains) {
+      let choices = [], num = 0;
+      let playedTiles = 9 - remains.length;
+      console.log('preventClicks = ', this.state.preventClicks)
       console.log('...waiting for instruction')
+
+      const random = (range) => {
+        var milliseconds = new Date().getMilliseconds();
+        return Math.floor(milliseconds * range / 1000);
+      };      
+      
+      const isAThreat = () => {
+        //looks for strategic plays that give player advantage
+          let playerMoves = [];
+          Object.keys(record).forEach((key)=> {
+            if(record[key] === 'X') playerMoves.push(key);
+          })
+          for (var i = 0; i < playerMoves.length; i++) {
+            for (var j = playerMoves.length; j > 0; --j) {
+              if (
+                (playerMoves[i] == 2 && playerMoves[j] == 4) ||
+                (playerMoves[i] == 2 && playerMoves[j] == 7) ||
+                (playerMoves[i] == 3 && playerMoves[j] == 4)
+              ) {
+                num = 1;
+              }
+              if (
+                (playerMoves[i] == 2 && playerMoves[j] == 6) ||
+                (playerMoves[i] == 1 && playerMoves[j] == 6) ||
+                (playerMoves[i] == 2 && playerMoves[j] == 9)
+              ) {
+                num = 3;
+              }
+              if (
+                (playerMoves[i] == 4 && playerMoves[j] == 8) ||
+                (playerMoves[i] == 1 && playerMoves[j] == 8) ||
+                (playerMoves[i] == 4 && playerMoves[j] == 9)
+              ) {
+                num = 7;
+              }
+              if (
+                (playerMoves[i] == 6 && playerMoves[j] == 8) ||
+                (playerMoves[i] == 3 && playerMoves[j] == 8) ||
+                (playerMoves[i] == 6 && playerMoves[j] == 7)
+              ) {
+                num = 9;
+              }
+            }
+          }
+          if (num !== 0) {
+            return document.getElementById('5').innerHTML !== '' ? 5 : num;
+            // if (square !== "") {
+            //   num = 5;
+            // }
+                
+            // return num;
+          }
+          return false;
+      };
+      
+      const decision = (log) => {
+        //looks for win/otherwise blocks player from winning
+        let defense = {};
+        
+        //console.log('decision log', log)
+        defense = checkForWin(log);
+       
+        for (var keys in defense) {     
+          if (defense[keys] === 2) {
+            var arr = mapBoard(keys);
+            //  console.log('keys', keys, 'arr', arr)
+            num = compare(arr);
+            // console.log('num', num)
+          }
+        }
+    
+        logPlays();
+        return num;
+      };      
+
+      //logical operations for computer to play based on the first few plays
+      switch (playedTiles) {
+        case 0:
+          // cpu plays first
+          choices = [1, 3, 7, 9];
+          num = choices[random(choices.length)];
+          break; 
+        case 1:
+          // cpu plays second
+          let isNotFive = false;          
+          for(let i = 0; i < remains.length; i++) {
+            if(remains[i] === 5) {
+              isNotFive = true;
+            } else
+            if (
+              remains[i] === 1 ||
+              remains[i] === 3 ||
+              remains[i] === 7 ||
+              remains[i] === 9
+            ) {
+              choices.push(remains[i]);
+            }
+          }
+          num = isNotFive ? 5 : choices[random(choices.length)];
+          break;         
+          
+        // case 2:
+        // console.log('case2')
+        //   num = isAThreat();
+        //   if (!num) {
+        //     num = random(avail);
+        //     return remains[num];
+        //   }
+        //   return num;
+          
+        case 3:
+          num = isAThreat();
+          console.log(num)
+          if (!num) {
+           // num = decision(humanLog);
+          }
+          if (!num) {
+            for (let i = 0; i < remains.length; i++) {
+              if (
+                remains[i] == 2 ||
+                remains[i] == 4 ||
+                remains[i] == 6 ||
+                remains[i] == 8
+              ) {
+                choices.push(remains[i]);
+                num = random(choices.length);
+              }
+            }
+            return choices[num];
+          }
+          return num;
+          
+        // case 4:
+        // console.log('case4')
+        //   num = decision(compLog);
+        //   if (!num) {
+        //     num = decision(humanLog);
+        //   }
+        //   if (!num) {
+        //     var square = document.getElementById('5').innerHTML;
+        //     //var square = $("#square5").html();
+        //     if (square === "") {
+        //       return 5;
+        //     } else {
+        //       num = random(avail);
+        //     return remains[num];
+        //     }
+        //   }
+        //   return num;
+          
+        // default:
+        // console.log('default')
+        //   num = decision(compLog);
+        // // console.log('num', num)
+        //   if (!num) {
+        //   //  console.log('nodecision complog', num)
+        //     num = decision(humanLog);
+        //   }
+        //   if (!num) {
+        //   //  console.log('nodecision humanlog', num)
+        //     num = random(avail);
+        //   // console.log(num, remains)
+        //     return remains[num];
+        //   }
+        // // console.log('nothing else', num)
+        //   return num;
+        
+      }  
+      
+      
+      document.getElementById(num).innerHTML = this.state.computer;
+      this.gameLog(this.state.computer, num)
     }
     
-
-  
     render() {
       return (
         <ErrorBoundary>
@@ -248,48 +428,48 @@ export class App extends Component{
      return this.props.children;
    };
  }; 
+
  
  var player, computer,
  humanLog = [], compLog = [], arr = [],
  human = {}, machine = {},
  winner = false, pause = true;
 
-function resetBoard() {
-  //resets the board
-  let tiles = document.getElementsByClassName('tile');
+// function resetBoard() {
+//   //resets the board
+//   let tiles = document.getElementsByClassName('tile');
 
-  for(let i = 0; i < tiles.length; i++) {
-    tiles[i].innerHTML = "";
-    //tiles[i].setAttribute('value', '');
-    tiles[i].style.cssText += 'color: white; text-shadow: 2px 0 2px lime';
-  }
+//   for(let i = 0; i < tiles.length; i++) {
+//     tiles[i].innerHTML = "";
+//     tiles[i].style.cssText += 'color: white; text-shadow: 2px 0 2px lime';
+//   }
 
-  human = {};
-  machine = {};
-  humanLog = [];
-  compLog = [];
-  arr = [];
-  winner = false;
-  pause = false;
-  setTimeout(compPlays, 800);
-}
+//   human = {};
+//   machine = {};
+//   humanLog = [];
+//   compLog = [];
+//   arr = [];
+//   winner = false;
+//   pause = false;
+//   setTimeout(compPlays, 800);
+// }
 
-function makeMove(obj, comp) {
-  // waits for human input to retract player selection option and prevents playing a square that is already occupied
-  player   = obj.innerHTML;
-  computer = comp
-  pause    = false;
-  logPlays();
+// function makeMove(obj, comp) {
+//   // waits for human input to retract player selection option and prevents playing a square that is already occupied
+//   player   = obj.innerHTML;
+//   computer = comp
+//   pause    = false;
+//   logPlays();
 
-  if (!winner) setTimeout(compPlays, 800);
-}
+//   if (!winner) setTimeout(compPlays, 800);
+// }
 
 function logPlays() {
   //scans the board and records the plays for player  
   var playerCount = [];
   for (var i = 1; i < 10; i++) {
     var plays = document.getElementById(i).innerHTML;
-    //console.log(plays)
+
     if (plays !== "") {
       if (plays === player) {
         human['square' + i] = plays;
@@ -303,7 +483,7 @@ function logPlays() {
       } else {
         machine["square" + i] = plays;
         compLog = Object.keys(machine);
-        //console.log('complog length', compLog.length)
+       
         if (compLog.length > 2) {
           console.log('sending complog')
           return checkForWin(compLog);
@@ -311,12 +491,7 @@ function logPlays() {
       }
     }
   }
-  // console.log({
-  //   'playercount' : playerCount,
-  //   'human' : human,
-  //   'machine' : machine,
-  //   'humanlog' : humanLog
-  // });
+
   return playerCount;
 }
 
@@ -437,7 +612,7 @@ function mapBoard(keys) {
 
 function compPlays() {
   //console.log('compPlays')
-  var num, list, options = [], score = [];
+  var num, list, remains = [], score = [];
 
   const illuminate = function() {
     console.log('illuminate called!')
@@ -454,13 +629,13 @@ function compPlays() {
     for (var i = 1; i < 10; i++) {
       list = document.getElementById(i).innerHTML;
       if (list === "") {
-        options.push(i);
+        remains.push(i);
       } else {
         score.push(i);
       }
     }
-    console.log({'options': options, 'score' : score})
-    num = compStrategy(score, options);
+    console.log({'remains': remains, 'score' : score})
+    num = compStrategy(score, remains);
     pause = true;
     //console.log('num', num, 'computer', computer, 'score.length', score.length)
     //document.getElementById(num).innerHTML = computer;
@@ -477,10 +652,10 @@ function compPlays() {
 
 };
 
-function compStrategy(score, options) {
+function compStrategy(score, remains) {
   var choices = [], num = 0,
   closed = score.length,
-  avail  = options.length;
+  avail  = remains.length;
 
   const random = (range) => {
     var milliseconds = new Date().getMilliseconds();
@@ -509,34 +684,34 @@ function compStrategy(score, options) {
 
   const isAThreat = () => {
   //looks for strategic plays that give player advantage
-    var pCount = logPlays();
-    for (var i = 0; i < pCount.length; i++) {
-      for (var j = pCount.length; j > 0; --j) {
+    var playerMoves = logPlays();
+    for (var i = 0; i < playerMoves.length; i++) {
+      for (var j = playerMoves.length; j > 0; --j) {
         if (
-          (pCount[i] == 2 && pCount[j] == 4) ||
-          (pCount[i] == 2 && pCount[j] == 7) ||
-          (pCount[i] == 3 && pCount[j] == 4)
+          (playerMoves[i] == 2 && playerMoves[j] == 4) ||
+          (playerMoves[i] == 2 && playerMoves[j] == 7) ||
+          (playerMoves[i] == 3 && playerMoves[j] == 4)
         ) {
           num = 1;
         }
         if (
-          (pCount[i] == 2 && pCount[j] == 6) ||
-          (pCount[i] == 1 && pCount[j] == 6) ||
-          (pCount[i] == 2 && pCount[j] == 9)
+          (playerMoves[i] == 2 && playerMoves[j] == 6) ||
+          (playerMoves[i] == 1 && playerMoves[j] == 6) ||
+          (playerMoves[i] == 2 && playerMoves[j] == 9)
         ) {
           num = 3;
         }
         if (
-          (pCount[i] == 4 && pCount[j] == 8) ||
-          (pCount[i] == 1 && pCount[j] == 8) ||
-          (pCount[i] == 4 && pCount[j] == 9)
+          (playerMoves[i] == 4 && playerMoves[j] == 8) ||
+          (playerMoves[i] == 1 && playerMoves[j] == 8) ||
+          (playerMoves[i] == 4 && playerMoves[j] == 9)
         ) {
           num = 7;
         }
         if (
-          (pCount[i] == 6 && pCount[j] == 8) ||
-          (pCount[i] == 3 && pCount[j] == 8) ||
-          (pCount[i] == 6 && pCount[j] == 7)
+          (playerMoves[i] == 6 && playerMoves[j] == 8) ||
+          (playerMoves[i] == 3 && playerMoves[j] == 8) ||
+          (playerMoves[i] == 6 && playerMoves[j] == 7)
         ) {
           num = 9;
         }
@@ -591,12 +766,12 @@ function compStrategy(score, options) {
       } else {
         for (var i = 0; i < avail; i++) {
           if (
-            options[i] == 1 ||
-            options[i] == 3 ||
-            options[i] == 7 ||
-            options[i] == 9
+            remains[i] == 1 ||
+            remains[i] == 3 ||
+            remains[i] == 7 ||
+            remains[i] == 9
           ) {
-            choices.push(options[i]);
+            choices.push(remains[i]);
           }
         }
         num = random(choices.length);
@@ -608,7 +783,7 @@ function compStrategy(score, options) {
       num = isAThreat();
       if (!num) {
         num = random(avail);
-        return options[num];
+        return remains[num];
       }
       return num;
       
@@ -622,12 +797,12 @@ function compStrategy(score, options) {
       if (!num) {
         for (i = 0; i < avail; i++) {
           if (
-            options[i] == 2 ||
-            options[i] == 4 ||
-            options[i] == 6 ||
-            options[i] == 8
+            remains[i] == 2 ||
+            remains[i] == 4 ||
+            remains[i] == 6 ||
+            remains[i] == 8
           ) {
-            choices.push(options[i]);
+            choices.push(remains[i]);
             num = random(choices.length);
           }
         }
@@ -648,7 +823,7 @@ function compStrategy(score, options) {
           return 5;
         } else {
           num = random(avail);
-        return options[num];
+        return remains[num];
         }
       }
       return num;
@@ -664,8 +839,8 @@ function compStrategy(score, options) {
       if (!num) {
       //  console.log('nodecision humanlog', num)
         num = random(avail);
-       // console.log(num, options)
-        return options[num];
+       // console.log(num, remains)
+        return remains[num];
       }
      // console.log('nothing else', num)
       return num;

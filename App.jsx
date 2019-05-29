@@ -11,8 +11,10 @@ export class App extends Component{
       this.state = {
         player  : '',
         computer: '',
+        unpauseCpu: false,
         playsFirst: true, // firstMove, goesFirst, movesFirst, startsFirst, playerStarts, winnerStarts, winnerMovesFirst, winnersFirst
         preventClicks: false,
+        
       }
 
     }
@@ -53,8 +55,7 @@ export class App extends Component{
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
-     // console.log('cdu', this.state)
-
+      return this.state
     }
   
     componentWillUnmount() {
@@ -106,9 +107,11 @@ export class App extends Component{
         if( player && !evt.target.innerHTML ) {
           this.id = document.getElementById(evt.target.id);
           this.id.innerHTML = player;
+          // this.setState(state => { 
+          //   return {unpauseCpu : true}
+          // });
+          this.state.unpauseCpu = true;
           this.gameLog(player, event.target.id)
-          // document.getElementById(evt.target.id).innerHTML = player;
-          // makeMove(evt.target, this.state.computer);
         } else if (!player) {
           alert('Select "X" or "O" to start game'); // convert #title header to message board via error function
         } else {
@@ -141,8 +144,10 @@ export class App extends Component{
       };
 
       const evaluateGameStatus = () => {
-
-        setTimeout(this.cpuHandler, 800);
+        console.log('evaluateGameStatus')
+        setTimeout( () => {
+          this.cpuHandler(this.recordTiles, this.tilesRemain);
+        }, 800);
       };
 
 
@@ -157,13 +162,15 @@ export class App extends Component{
       let playsRemain = this.tilesRemain.length;
 
       if(!playsRemain) return resetGame();
-
-      if(playsRemain <= 4) {
-        evaluateGameStatus();
-      } else {
-        setTimeout(() => {
-          this.cpuHandler(this.recordTiles, this.tilesRemain)
-        }, 800);
+      
+      if(this.state.unpauseCpu) {
+        if(playsRemain <= 4) {
+          evaluateGameStatus();
+        } else {
+          setTimeout(() => {
+            this.cpuHandler(this.recordTiles, this.tilesRemain)
+          }, 800);
+        }
       }
       
       //console.log(this.recordTiles, this.tilesRemain)
@@ -173,6 +180,7 @@ export class App extends Component{
     cpuHandler(record, remains) {
       let choices = [], num = 0;
       let playedTiles = 9 - remains.length;
+      let playerMoves = [];
       console.log('preventClicks = ', this.state.preventClicks)
       console.log('...waiting for instruction')
 
@@ -182,43 +190,43 @@ export class App extends Component{
       };      
       
       const isAThreat = () => {
-        //looks for strategic plays that give player advantage
-          let playerMoves = [];
+        //looks for strategic plays that give player advantage         
           Object.keys(record).forEach((key)=> {
-            if(record[key] === 'X') playerMoves.push(key);
+            if(record[key] === this.state.player) playerMoves.push(key);
           })
           for (var i = 0; i < playerMoves.length; i++) {
             for (var j = playerMoves.length; j > 0; --j) {
               if (
-                (playerMoves[i] == 2 && playerMoves[j] == 4) ||
-                (playerMoves[i] == 2 && playerMoves[j] == 7) ||
-                (playerMoves[i] == 3 && playerMoves[j] == 4)
+                (playerMoves[i] === 2 && playerMoves[j] === 4) ||
+                (playerMoves[i] === 2 && playerMoves[j] === 7) ||
+                (playerMoves[i] === 3 && playerMoves[j] === 4)
               ) {
                 num = 1;
               }
               if (
-                (playerMoves[i] == 2 && playerMoves[j] == 6) ||
-                (playerMoves[i] == 1 && playerMoves[j] == 6) ||
-                (playerMoves[i] == 2 && playerMoves[j] == 9)
+                (playerMoves[i] === 2 && playerMoves[j] === 6) ||
+                (playerMoves[i] === 1 && playerMoves[j] === 6) ||
+                (playerMoves[i] === 2 && playerMoves[j] === 9)
               ) {
                 num = 3;
               }
               if (
-                (playerMoves[i] == 4 && playerMoves[j] == 8) ||
-                (playerMoves[i] == 1 && playerMoves[j] == 8) ||
-                (playerMoves[i] == 4 && playerMoves[j] == 9)
+                (playerMoves[i] === 4 && playerMoves[j] === 8) ||
+                (playerMoves[i] === 1 && playerMoves[j] === 8) ||
+                (playerMoves[i] === 4 && playerMoves[j] === 9)
               ) {
                 num = 7;
               }
               if (
-                (playerMoves[i] == 6 && playerMoves[j] == 8) ||
-                (playerMoves[i] == 3 && playerMoves[j] == 8) ||
-                (playerMoves[i] == 6 && playerMoves[j] == 7)
+                (playerMoves[i] === 6 && playerMoves[j] === 8) ||
+                (playerMoves[i] === 3 && playerMoves[j] === 8) ||
+                (playerMoves[i] === 6 && playerMoves[j] === 7)
               ) {
                 num = 9;
               }
             }
           }
+
           if (num !== 0) {
             return document.getElementById('5').innerHTML !== '' ? 5 : num;
             // if (square !== "") {
@@ -246,19 +254,19 @@ export class App extends Component{
           }
         }
     
-        logPlays();
+        //logPlays();
         return num;
       };      
-
+      console.log(playedTiles, 'playedTiles')
       //logical operations for computer to play based on the first few plays
       switch (playedTiles) {
         case 0:
-          // cpu plays first
+          // if cpu starts game
           choices = [1, 3, 7, 9];
           num = choices[random(choices.length)];
           break; 
         case 1:
-          // cpu plays second
+          // if cpu doesn't start game
           let isNotFive = false;          
           for(let i = 0; i < remains.length; i++) {
             if(remains[i] === 5) {
@@ -276,36 +284,26 @@ export class App extends Component{
           num = isNotFive ? 5 : choices[random(choices.length)];
           break;         
           
-        // case 2:
-        // console.log('case2')
-        //   num = isAThreat();
-        //   if (!num) {
-        //     num = random(avail);
-        //     return remains[num];
-        //   }
-        //   return num;
-          
-        case 3:
+        case 2:
+        console.log('case2')
           num = isAThreat();
-          console.log(num)
           if (!num) {
-           // num = decision(humanLog);
-          }
-          if (!num) {
-            for (let i = 0; i < remains.length; i++) {
-              if (
-                remains[i] == 2 ||
-                remains[i] == 4 ||
-                remains[i] == 6 ||
-                remains[i] == 8
-              ) {
-                choices.push(remains[i]);
-                num = random(choices.length);
-              }
-            }
-            return choices[num];
+            num = random(remains.length);
+            return remains[num];
           }
           return num;
+          
+        case 3:  
+          num = isAThreat() ? num : checkDefense(record, this.state.player);
+          if(!num.length) num = random(remains.length);
+          if(typeof num === 'string') {
+            for(let i = 2; i < 10; i += 2) {
+              if(!record[i]) choices.push(i);
+              num = choices[random(choices.length)];
+            }
+          }
+          
+          break;
           
         // case 4:
         // console.log('case4')
@@ -325,27 +323,25 @@ export class App extends Component{
         //   }
         //   return num;
           
-        // default:
-        // console.log('default')
-        //   num = decision(compLog);
-        // // console.log('num', num)
-        //   if (!num) {
-        //   //  console.log('nodecision complog', num)
-        //     num = decision(humanLog);
-        //   }
-        //   if (!num) {
-        //   //  console.log('nodecision humanlog', num)
-        //     num = random(avail);
-        //   // console.log(num, remains)
-        //     return remains[num];
-        //   }
-        // // console.log('nothing else', num)
-        //   return num;
+        default:
+         console.log('default')
+          num = checkDefense(record, this.state.player);
         
+          if(!num[0]) {         
+            num = checkDefense(record, this.state.computer);
+          } 
+          
+          if(!num[0]) {
+            num = remains[random(remains.length)];
+            console.log('random number', num, remains)
+          }
+          break;
       }  
       
+      console.log(num, typeof num)
       
-      document.getElementById(num).innerHTML = this.state.computer;
+      document.getElementById( num.length? num[0]: num).innerHTML = this.state.computer;
+      this.state.unpauseCpu = false;
       this.gameLog(this.state.computer, num)
     }
     
@@ -368,7 +364,7 @@ export class App extends Component{
 }
 
   // Construct gameboard and podium
-  const Gameboard = (props) => {
+const Gameboard = (props) => {
 
    const buildTable = (arr) => {
      let td = arr.map( (num, idx) => {
@@ -397,10 +393,10 @@ export class App extends Component{
        </div>
      </ErrorBoundary>
     );
- }
+}
  
    // Error class React Component
- class ErrorBoundary extends React.Component {
+class ErrorBoundary extends React.Component {
    constructor(props) {
      super(props);
        this.state = { hasError: false };
@@ -427,7 +423,47 @@ export class App extends Component{
      }
      return this.props.children;
    };
- }; 
+}; 
+
+const checkDefense = (record, player) => {
+  console.log('checkDefense', record, player)
+  const arr = [[1,2,3], [4,5,6], [7,8,9],
+               [1,4,7], [2,5,8], [3,6,9],
+               [1,5,9], [3,5,7]
+              ];
+
+  let defense = [],
+      moves   = [],        
+      clone   = [];
+
+  arr.forEach( item => clone.push(item.slice()));
+  
+  for(var key in record) {
+    if(record[key] === player) moves.push(parseInt(key))
+  }
+
+  
+  for(var i = 0; i < clone.length; i++) {
+    var count = 0;
+    for(var j = 0; j < clone[i].length; j++) {
+      for(var k = 0; k < moves.length; k++) {
+        if(clone[i][j] === moves[k]) {
+          count++;
+          clone[i].splice(j, 1);
+        }
+      }
+    }
+
+    if(count===3) return arr[i];
+    if(count===2) {
+      if(!record[clone[i][0]]) {
+        defense.push(clone[i][0]);
+      } else if(i === 6 || i === 7) return 'strategy';
+    }
+  }
+  
+    return defense;
+  };
 
  
  var player, computer,

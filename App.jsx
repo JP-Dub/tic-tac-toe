@@ -91,8 +91,10 @@ export class App extends Component{
       this.removeAnimation();
 
       if(!this.state.playsFirst) {
-        this.setState({preventClicks : true}); // validate importance/necessasity
-        setTimeout(this.cpuHandler, 800);
+        //this.setState({preventClicks : true}); // validate importance/necessasity
+        setTimeout(() => {
+          this.cpuHandler(this.recordTiles, this.tilesRemain);
+        }, 800);
       } 
 
     } 
@@ -107,9 +109,6 @@ export class App extends Component{
         if( player && !evt.target.innerHTML ) {
           this.id = document.getElementById(evt.target.id);
           this.id.innerHTML = player;
-          // this.setState(state => { 
-          //   return {unpauseCpu : true}
-          // });
           this.state.unpauseCpu = true;
           this.gameLog(player, event.target.id)
         } else if (!player) {
@@ -138,8 +137,9 @@ export class App extends Component{
         this.setState({
           player  : '',
           computer: '',
+          unpauseCpu: true,
           playsFirst: false, // plan to rm from reset or change to variable
-          preventClicks: false,
+          preventClicks: true,
         });
       };
 
@@ -185,6 +185,7 @@ export class App extends Component{
       console.log('...waiting for instruction')
 
       const random = (range) => {
+        console.log('random')
         var milliseconds = new Date().getMilliseconds();
         return Math.floor(milliseconds * range / 1000);
       };      
@@ -192,10 +193,11 @@ export class App extends Component{
       const isAThreat = () => {
         //looks for strategic plays that give player advantage         
           Object.keys(record).forEach((key)=> {
-            if(record[key] === this.state.player) playerMoves.push(key);
+            if(record[key] === this.state.player) playerMoves.push(parseInt(key));
           })
           for (var i = 0; i < playerMoves.length; i++) {
-            for (var j = playerMoves.length; j > 0; --j) {
+            for (var j = playerMoves.length-1; j > 0; j--) {
+              console.log(playerMoves[i], playerMoves[j])
               if (
                 (playerMoves[i] === 2 && playerMoves[j] === 4) ||
                 (playerMoves[i] === 2 && playerMoves[j] === 7) ||
@@ -226,37 +228,15 @@ export class App extends Component{
               }
             }
           }
-
-          if (num !== 0) {
-            return document.getElementById('5').innerHTML !== '' ? 5 : num;
-            // if (square !== "") {
-            //   num = 5;
-            // }
-                
-            // return num;
-          }
-          return false;
+          console.log('isAthreat ', num)
+          // if (num) {
+          //   console.log('returning ', num)
+          //   return record['5'] ? num : 5;
+          // }
+          // return false;
+          return num ? record['5'] ? num : 5 : false;
       };
-      
-      const decision = (log) => {
-        //looks for win/otherwise blocks player from winning
-        let defense = {};
-        
-        //console.log('decision log', log)
-        defense = checkForWin(log);
-       
-        for (var keys in defense) {     
-          if (defense[keys] === 2) {
-            var arr = mapBoard(keys);
-            //  console.log('keys', keys, 'arr', arr)
-            num = compare(arr);
-            // console.log('num', num)
-          }
-        }
-    
-        //logPlays();
-        return num;
-      };      
+           
       console.log(playedTiles, 'playedTiles')
       //logical operations for computer to play based on the first few plays
       switch (playedTiles) {
@@ -266,12 +246,12 @@ export class App extends Component{
           num = choices[random(choices.length)];
           break; 
         case 1:
-          // if cpu doesn't start game
+          // if cpu doesn't start game: play corner if 5 is played
           let isNotFive = false;          
           for(let i = 0; i < remains.length; i++) {
-            if(remains[i] === 5) {
-              isNotFive = true;
-            } else
+            // if(remains[i] === 5) {
+            //   isNotFive = true;
+            // } else
             if (
               remains[i] === 1 ||
               remains[i] === 3 ||
@@ -281,65 +261,65 @@ export class App extends Component{
               choices.push(remains[i]);
             }
           }
-          num = isNotFive ? 5 : choices[random(choices.length)];
+          //num = isNotFive ? 5 : choices[random(choices.length)];
+          num = !record['5'] ? 5 : choices[random(choices.length)];
           break;         
           
         case 2:
-        console.log('case2')
+          console.log('case2')
           num = isAThreat();
-          if (!num) {
-            num = random(remains.length);
-            return remains[num];
-          }
-          return num;
+          if (!num) num = remains[random(remains.length)];            
+          break;
           
         case 3:  
           num = isAThreat() ? num : checkDefense(record, this.state.player);
-          if(!num.length) num = random(remains.length);
-          if(typeof num === 'string') {
-            for(let i = 2; i < 10; i += 2) {
-              if(!record[i]) choices.push(i);
-              num = choices[random(choices.length)];
-            }
-          }
+          //if(!num.length) num = remains[random(remains.length)];
           
+          // if(typeof num === 'string') {
+          //   for(let i = 2; i < 10; i += 2) {
+          //     if(!record[i]) choices.push(i);
+          //     num = choices[random(choices.length)];
+          //   }
+          // }         
           break;
           
-        // case 4:
-        // console.log('case4')
-        //   num = decision(compLog);
-        //   if (!num) {
-        //     num = decision(humanLog);
-        //   }
-        //   if (!num) {
-        //     var square = document.getElementById('5').innerHTML;
-        //     //var square = $("#square5").html();
-        //     if (square === "") {
-        //       return 5;
-        //     } else {
-        //       num = random(avail);
-        //     return remains[num];
-        //     }
-        //   }
-        //   return num;
+        case 4:
+          console.log('case4')
+          num = checkDefense(record, this.state.computer);
+          if(!num) num = checkDefense(record, this.state.player);
+
+          if (!num) {
+            //var square = document.getElementById('5').innerHTML;
+            num =  !record['5'] ? 5 : remains[random(remains.length)];
+          }
+          break;
           
         default:
          console.log('default')
-          num = checkDefense(record, this.state.player);
+          num = checkDefense(record, this.state.computer);
         
           if(!num[0]) {         
-            num = checkDefense(record, this.state.computer);
+            num = checkDefense(record, this.state.player);
           } 
           
           if(!num[0]) {
-            num = remains[random(remains.length)];
             console.log('random number', num, remains)
+            num = remains[random(remains.length)];
+
           }
           break;
-      }  
-      
+      }
+
       console.log(num, typeof num)
       
+      if(typeof num === 'string') {
+        for(let i = 2; i < 10; i += 2) {
+          if(!record[i]) choices.push(i);
+          num = choices[random(choices.length)];
+          if(!num) num = remains[random(remains.length)];
+        }
+      }   
+            
       document.getElementById( num.length? num[0]: num).innerHTML = this.state.computer;
       this.state.unpauseCpu = false;
       this.gameLog(this.state.computer, num)
@@ -427,21 +407,21 @@ class ErrorBoundary extends React.Component {
 
 const checkDefense = (record, player) => {
   console.log('checkDefense', record, player)
-  const arr = [[1,2,3], [4,5,6], [7,8,9],
-               [1,4,7], [2,5,8], [3,6,9],
-               [1,5,9], [3,5,7]
+  const arr = [[1,2,3], [4,5,6], [7,8,9], // horizontal wins
+               [1,4,7], [2,5,8], [3,6,9], // vertical wins
+               [1,5,9], [3,5,7]           // diagonal wins
               ];
 
-  let defense = [],
-      moves   = [],        
-      clone   = [];
+  // let defense = [],
+  //     moves   = [],        
+  //     clone   = [];
+  let [defense, moves, clone] = [[],[],[]];            
 
   arr.forEach( item => clone.push(item.slice()));
   
   for(var key in record) {
     if(record[key] === player) moves.push(parseInt(key))
   }
-
   
   for(var i = 0; i < clone.length; i++) {
     var count = 0;
@@ -462,8 +442,8 @@ const checkDefense = (record, player) => {
     }
   }
   
-    return defense;
-  };
+  return defense;
+};
 
  
  var player, computer,

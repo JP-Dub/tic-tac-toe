@@ -1,6 +1,16 @@
 import React, { Component } from 'react';
 //, { Component }
 //export default ...
+
+      // winning combos
+const arr = [
+      [1,2,3], [4,5,6], [7,8,9],
+      [1,4,7], [2,5,8], [3,6,9],
+      [1,5,9], [3,5,7] 
+      ];
+      
+
+
 export class App extends Component{
    constructor(props) {
       super(props);
@@ -14,6 +24,7 @@ export class App extends Component{
         unpauseCpu: false,
         playsFirst: true, // firstMove, goesFirst, movesFirst, startsFirst, playerStarts, winnerStarts, winnerMovesFirst, winnersFirst
         preventClicks: false,
+        prevThreat: false,
         
       }
 
@@ -66,7 +77,7 @@ export class App extends Component{
     
     // select 'X' or 'O' to start game
     selectPlayer(icon) {
-      icon.preventDefault();
+      icon.preventDefault();      
 
       let click = icon.target.innerHTML;
 
@@ -122,7 +133,7 @@ export class App extends Component{
     
     // handle cpu and player movements
     gameLog(logPlayer, logTileId) {
-
+      console.log('gameLog', logPlayer, logTileId)
       const resetGame = () => {
         // set tiles to default
         let tiles = document.getElementsByClassName('tile');
@@ -154,11 +165,10 @@ export class App extends Component{
       this.setState({
         preventClicks : this.state.preventClicks ? false : true,
       });
-      
-      
+           
       this.tilesRemain.splice( this.tilesRemain.indexOf(parseInt(logTileId)), 1);   
       this.recordTiles[logTileId] = logPlayer;
-
+      //console.log('logplayer', logPlayer, this.recordTiles)
       let playsRemain = this.tilesRemain.length;
 
       if(!playsRemain) return resetGame();
@@ -175,68 +185,138 @@ export class App extends Component{
       
       //console.log(this.recordTiles, this.tilesRemain)
     }
-
+    
     // handle cpu response to player 
     cpuHandler(record, remains) {
-      let choices = [], num = 0;
+      let [clone, choices] = [[],[]], num = 0, threat;
+      let offense = true;
       let playedTiles = 9 - remains.length;
-      //let isAThreat = [];
+            // make a clone of the arr
+      arr.map( item => clone.push(item.slice()));
+      console.log('remains', remains)
       const [corner, side] = [[1,3,7,9], [2,4,6,8]];
-      console.log('preventClicks = ', this.state.preventClicks)
-      console.log('...waiting for instruction')
 
-      // const random = (range) => {
-      //   console.log('random')
-      //   var milliseconds = new Date().getMilliseconds();
-      //   return Math.floor(milliseconds * range / 1000);
-      // };      
+      console.log('...waiting for instruction')
+     
+      const random = (range) => {
+        let milliseconds = new Date().getMilliseconds();
+        return Math.floor(milliseconds * range / 1000);
+      };
       
-      // const isAThreat = () => {
-      //   //looks for strategic plays that give player advantage         
-      //     Object.keys(record).forEach((key)=> {
-      //       if(record[key] === this.state.player) isAThreat.push(parseInt(key));
-      //     })
-      //     for (var i = 0; i < isAThreat.length; i++) {
-      //       for (var j = isAThreat.length-1; j > 0; j--) {
-      //         console.log(isAThreat[i], isAThreat[j])
-      //         if (
-      //           (isAThreat[i] === 2 && isAThreat[j] === 4) ||
-      //           (isAThreat[i] === 2 && isAThreat[j] === 7) ||
-      //           (isAThreat[i] === 3 && isAThreat[j] === 4)
-      //         ) {
-      //           num = 1;
-      //         }
-      //         if (
-      //           (isAThreat[i] === 2 && isAThreat[j] === 6) ||
-      //           (isAThreat[i] === 1 && isAThreat[j] === 6) ||
-      //           (isAThreat[i] === 2 && isAThreat[j] === 9)
-      //         ) {
-      //           num = 3;
-      //         }
-      //         if (
-      //           (isAThreat[i] === 4 && isAThreat[j] === 8) ||
-      //           (isAThreat[i] === 1 && isAThreat[j] === 8) ||
-      //           (isAThreat[i] === 4 && isAThreat[j] === 9)
-      //         ) {
-      //           num = 7;
-      //         }
-      //         if (
-      //           (isAThreat[i] === 6 && isAThreat[j] === 8) ||
-      //           (isAThreat[i] === 3 && isAThreat[j] === 8) ||
-      //           (isAThreat[i] === 6 && isAThreat[j] === 7)
-      //         ) {
-      //           num = 9;
-      //         }
-      //       }
-      //     }
-      //     console.log('isAthreat ', num)
-      //     // if (num) {
-      //     //   console.log('returning ', num)
-      //     //   return record['5'] ? num : 5;
-      //     // }
-      //     // return false;
-      //     return num ? record['5'] ? num : 5 : false;
-      // };
+      function checkDefense(record, player) {
+        // let offense = true,
+        const [defense, played, unplayed] = [[], [], []];
+        //const [corner, side] = [[1,3,7,9], [2,4,6,8]];
+      
+        const strategy = (isAThreat) => {     
+          //looks for strategic plays that give player advantage    
+          let num;
+      
+          for (var i = 0; i < isAThreat.length; i++) {
+            for (var j = isAThreat.length-1; j > 0; j--) {
+              if (
+                (isAThreat[i] === 2 && isAThreat[j] === 4) ||
+                (isAThreat[i] === 2 && isAThreat[j] === 7) ||
+                (isAThreat[i] === 3 && isAThreat[j] === 4)
+              ) { 
+                num = 1; }
+              
+              if (
+                (isAThreat[i] === 2 && isAThreat[j] === 6) ||
+                (isAThreat[i] === 1 && isAThreat[j] === 6) ||
+                (isAThreat[i] === 2 && isAThreat[j] === 9)
+              ) { num = 3; }
+                    
+              if (
+                (isAThreat[i] === 4 && isAThreat[j] === 8) ||
+                (isAThreat[i] === 1 && isAThreat[j] === 8) ||
+                (isAThreat[i] === 4 && isAThreat[j] === 9)
+              ) { num = 7; }
+              
+              if (
+                (isAThreat[i] === 6 && isAThreat[j] === 8) ||
+                (isAThreat[i] === 3 && isAThreat[j] === 8) ||
+                (isAThreat[i] === 6 && isAThreat[j] === 7)
+              ) { num = 9; }
+            }
+          }
+          
+          return num;
+        };  
+        
+        for(let i =1; i < 10; i++) {
+          if(record[i] === player) played.push(i);
+          if(!record[i]) unplayed.push(i);
+        }
+        // create two arrays for moves played and moves remaining
+        // for(var key in record) {
+        //   if(record[key] === player) played.push(parseInt(key));   
+        //   console.log('sucker', record[key])      
+        //   if(!record[key]) unplayed.push(parseInt(key));
+        // }
+        console.log(played, unplayed, player)
+
+        // run function to determin if strategy being set up
+        if(playedTiles < 5) threat = strategy(played);
+        
+        if(threat) {
+          console.log('...threat found, ', threat)
+    
+          if(!record[threat]) return {results: threat,
+                                      offense: offense,
+                                      type: 'threat'};
+        }
+        console.log('...no threat found, continue searching...')
+        
+        // access winning combos and returns a possible move.
+        for(var i = 0; i < clone.length; i++) {
+          var count = 0;
+          for(var j = 0; j < clone[i].length; j++) {
+            for(var k = 0; k < played.length; k++) {
+              if(clone[i][j] === played[k]) {
+                count++;
+                clone[i].splice(j, 1);
+              }
+            }
+          }    
+
+          if(count===3) return {type: 'win',
+                                results: arr[i]};
+          if(count===2) {
+            console.log('count = 2', clone)
+            if(!record[clone[i][0]]) { // push value left in arr
+              defense.push(clone[i][0]);
+              clone[i].splice(0, 1);
+              
+              return {results: defense[0],
+                      offense: offense,
+                      type: 'strategy'};
+            }  
+            
+            if(i === 6 || i === 7 ) {        
+              for(let i = 2; i < 10; i += 2) {
+                if(!record[i]) defense.push(i)
+              }
+              console.log('...diag strategy found, ', defense)
+              return {results: defense[random(defense.length)],
+                      offense: offense,
+                      type: 'diag strategy'};
+            } 
+          } 
+        }
+        
+        console.log('...no offense found', defense)
+        if(offense) {
+          offense = false;
+          console.log('...searching defensive move')
+          player = player === 'X' ? 'O' : 'X';
+          checkDefense(record, player);
+        } 
+        console.log('...no move found, plugging random, ', unplayed)
+        return {results: unplayed[random(unplayed.length)],
+                offense: offense,
+                type: 'random'};
+      };
            
       console.log(playedTiles, 'playedTiles')
       //logical operations for computer to play based on the first few plays
@@ -258,21 +338,7 @@ export class App extends Component{
             num = 5;
           }
           break;         
-          
-        // case 2:
-        //   console.log('case2')
-            
-        //   break;
-          
-        // case 3:  
-          
-        //   break;
-          
-        // case 4:
-        //   console.log('case4')
-
-        //   break;
-          
+    
         default:
          console.log('default')
           num = checkDefense(record, this.state.player);
@@ -294,7 +360,8 @@ export class App extends Component{
             
       document.getElementById(num).innerHTML = this.state.computer;
       this.state.unpauseCpu = false;
-      this.gameLog(this.state.computer, num.results)
+      //console.log(this.state.computer, num)
+      this.gameLog(this.state.computer, num)
     }
     
     render() {
@@ -377,129 +444,184 @@ class ErrorBoundary extends React.Component {
    };
 }; 
 
-// winning combos
-const [clone, arr] = [[], [
-  [1,2,3], [4,5,6], [7,8,9],
-  [1,4,7], [2,5,8], [3,6,9],
-  [1,5,9], [3,5,7]
-  ]
-];
-// make a clone of the arr
-arr.forEach( item => clone.push(item.slice()));
 
-const random = (range) => {
-  let milliseconds = new Date().getMilliseconds();
-  return Math.floor(milliseconds * range / 1000);
-};
 
-function checkDefense(record, player) {
-  let offense = true;
-  const [defense, played, unplayed] = [[], [], []];
-  //const [corner, side] = [[1,3,7,9], [2,4,6,8]];
+// const random = (range) => {
+//   let milliseconds = new Date().getMilliseconds();
+//   return Math.floor(milliseconds * range / 1000);
+// };
+
+// function checkDefense(record, player) {
+//   let offense = true, previousThreat = false;
+//   const [defense, played, unplayed] = [[], [], []];
+//   //const [corner, side] = [[1,3,7,9], [2,4,6,8]];
   
-  // const random = (range) => {
-  //   let milliseconds = new Date().getMilliseconds();
-  //   return Math.floor(milliseconds * range / 1000);
-  // };
+//   // const random = (range) => {
+//   //   let milliseconds = new Date().getMilliseconds();
+//   //   return Math.floor(milliseconds * range / 1000);
+//   // };
 
-  const strategy = (isAThreat) => {     
-    // change name of func to strategy and var to isAThreat
-    let num;
-    //looks for strategic plays that give player advantage         
+//   const strategy = (isAThreat) => {     
+//     //looks for strategic plays that give player advantage    
+//     let num;
 
-    for (var i = 0; i < isAThreat.length; i++) {
-      for (var j = isAThreat.length-1; j > 0; j--) {
-        if (
-          (isAThreat[i] === 2 && isAThreat[j] === 4) ||
-          (isAThreat[i] === 2 && isAThreat[j] === 7) ||
-          (isAThreat[i] === 3 && isAThreat[j] === 4)
-        ) { num = 1; }
+//     for (var i = 0; i < isAThreat.length; i++) {
+//       for (var j = isAThreat.length-1; j > 0; j--) {
+//         if (
+//           (isAThreat[i] === 2 && isAThreat[j] === 4) ||
+//           (isAThreat[i] === 2 && isAThreat[j] === 7) ||
+//           (isAThreat[i] === 3 && isAThreat[j] === 4)
+//         ) { 
+//           num = 1; }
         
-        if (
-          (isAThreat[i] === 2 && isAThreat[j] === 6) ||
-          (isAThreat[i] === 1 && isAThreat[j] === 6) ||
-          (isAThreat[i] === 2 && isAThreat[j] === 9)
-        ) { num = 3; }
+//         if (
+//           (isAThreat[i] === 2 && isAThreat[j] === 6) ||
+//           (isAThreat[i] === 1 && isAThreat[j] === 6) ||
+//           (isAThreat[i] === 2 && isAThreat[j] === 9)
+//         ) { num = 3; }
               
-        if (
-          (isAThreat[i] === 4 && isAThreat[j] === 8) ||
-          (isAThreat[i] === 1 && isAThreat[j] === 8) ||
-          (isAThreat[i] === 4 && isAThreat[j] === 9)
-        ) { num = 7; }
+//         if (
+//           (isAThreat[i] === 4 && isAThreat[j] === 8) ||
+//           (isAThreat[i] === 1 && isAThreat[j] === 8) ||
+//           (isAThreat[i] === 4 && isAThreat[j] === 9)
+//         ) { num = 7; }
         
-        if (
-          (isAThreat[i] === 6 && isAThreat[j] === 8) ||
-          (isAThreat[i] === 3 && isAThreat[j] === 8) ||
-          (isAThreat[i] === 6 && isAThreat[j] === 7)
-        ) { num = 9; }
-      }
-    }
-    
-    return num;
-  };  
+//         if (
+//           (isAThreat[i] === 6 && isAThreat[j] === 8) ||
+//           (isAThreat[i] === 3 && isAThreat[j] === 8) ||
+//           (isAThreat[i] === 6 && isAThreat[j] === 7)
+//         ) { num = 9; }
+//       }
+//     }
 
-  // create two arrays for moves played and moves remaining
-  for(var key in record) {
-    if(record[key] === player) played.push(parseInt(key)); 
-    if(!record[key]) unplayed.push(parseInt(key));
-  }
+//     if(num && !record[num]) previousThreat = true;
+//     return num;
+//   };  
+
+//   // create two arrays for moves played and moves remaining
+//   for(var key in record) {
+//     if(record[key] === player) played.push(parseInt(key)); 
+//     if(!record[key]) unplayed.push(parseInt(key));
+//   }
   
-  // run function to determin if strategy being set up
-  let threat = strategy(played);
-  if(threat) {
-    console.log('...threat found, ', threat)
-    if(!record[threat]) return {results: threat,
-                                offense: offense,
-                                type: 'threat'};
-  }
-  console.log('...no threat found, ', threat)
+//   // run function to determin if strategy being set up
+//   let threat = strategy(played);
+//   if(threat && !previousThreat) {
+//     console.log('...threat found, ', threat)
+//     if(!record[threat]) return {results: threat,
+//                                 offense: offense,
+//                                 type: 'threat'};
+//   }
+//   console.log('...no threat found, ', threat)
   
-  // access winning combos and returns a possible move.
-  for(var i = 0; i < clone.length; i++) {
-    var count = 0;
-    for(var j = 0; j < clone[i].length; j++) {
-      for(var k = 0; k < played.length; k++) {
-        if(clone[i][j] === played[k]) {
-          count++;
-          clone[i].splice(j, 1);
-        }
-      }
-    }    
-    if(count===3) return {results: 'win',
-                          numbers: arr[i]};
-    if(count===2) {
-      if(!record[clone[i][0]]) { // push value left in arr
-        defense.push(clone[i][0]);
-        clone[i].splice(0, 1);
-        return {results: defense[0],
-                offense: offense,
-                type: 'strategy'};
-      }  
+//   // access winning combos and returns a possible move.
+//   for(var i = 0; i < clone.length; i++) {
+//     var count = 0;
+//     for(var j = 0; j < clone[i].length; j++) {
+//       for(var k = 0; k < played.length; k++) {
+//         if(clone[i][j] === played[k]) {
+//           count++;
+//           clone[i].splice(j, 1);
+//         }
+//       }
+//     }    
+//     if(count===3) return {results: 'win',
+//                           numbers: arr[i]};
+//     if(count===2) {
+//       if(!record[clone[i][0]]) { // push value left in arr
+//         defense.push(clone[i][0]);
+//         clone[i].splice(0, 1);
+//         return {results: defense[0],
+//                 offense: offense,
+//                 type: 'strategy'};
+//       }  
       
-      if(i === 6 || i === 7 ) {        
-        for(let i = 2; i < 10; i += 2) {
-          if(!record[i]) defense.push(i)
-        }
-        console.log('...diag strategy found, ', defense)
-        return {results: defense[random(defense.length)],
-                offense: offense,
-                type: 'diag strategy'};
-      } 
-    } 
-  }
+//       if(i === 6 || i === 7 ) {        
+//         for(let i = 2; i < 10; i += 2) {
+//           if(!record[i]) defense.push(i)
+//         }
+//         console.log('...diag strategy found, ', defense)
+//         return {results: defense[random(defense.length)],
+//                 offense: offense,
+//                 type: 'diag strategy'};
+//       } 
+//     } 
+//   }
   
-  console.log('...no offense found', defense)
-  if(offense) {
-    offense = false;
-    console.log('...searching defensive move')
-    player = player === 'X' ? 'O' : 'X';
-    checkDefense(record, player);
-  } 
-  console.log('...no move found, plugging random, ', unplayed)
-  return {results: unplayed[random(unplayed.length)],
-         offense: offense,
-         type: 'random'};
-};
+//   console.log('...no offense found', defense)
+//   if(offense && defense) {
+//     offense = false;
+//     defense = false;
+//     console.log('...searching defensive move')
+//     player = player === 'X' ? 'O' : 'X';
+//     checkDefense(record, player);
+//   } 
+//   console.log('...no move found, plugging random, ', unplayed)
+//   return {results: unplayed[random(unplayed.length)],
+//          offense: offense,
+//          type: 'random'};
+// };
+
+
+
+      // const random = (range) => {
+      //   console.log('random')
+      //   var milliseconds = new Date().getMilliseconds();
+      //   return Math.floor(milliseconds * range / 1000);
+      // };      
+      
+      // const isAThreat = () => {
+      //   //looks for strategic plays that give player advantage         
+      //     Object.keys(record).forEach((key)=> {
+      //       if(record[key] === this.state.player) isAThreat.push(parseInt(key));
+      //     })
+      //     for (var i = 0; i < isAThreat.length; i++) {
+      //       for (var j = isAThreat.length-1; j > 0; j--) {
+      //         console.log(isAThreat[i], isAThreat[j])
+      //         if (
+      //           (isAThreat[i] === 2 && isAThreat[j] === 4) ||
+      //           (isAThreat[i] === 2 && isAThreat[j] === 7) ||
+      //           (isAThreat[i] === 3 && isAThreat[j] === 4)
+      //         ) {
+      //           num = 1;
+      //         }
+      //         if (
+      //           (isAThreat[i] === 2 && isAThreat[j] === 6) ||
+      //           (isAThreat[i] === 1 && isAThreat[j] === 6) ||
+      //           (isAThreat[i] === 2 && isAThreat[j] === 9)
+      //         ) {
+      //           num = 3;
+      //         }
+      //         if (
+      //           (isAThreat[i] === 4 && isAThreat[j] === 8) ||
+      //           (isAThreat[i] === 1 && isAThreat[j] === 8) ||
+      //           (isAThreat[i] === 4 && isAThreat[j] === 9)
+      //         ) {
+      //           num = 7;
+      //         }
+      //         if (
+      //           (isAThreat[i] === 6 && isAThreat[j] === 8) ||
+      //           (isAThreat[i] === 3 && isAThreat[j] === 8) ||
+      //           (isAThreat[i] === 6 && isAThreat[j] === 7)
+      //         ) {
+      //           num = 9;
+      //         }
+      //       }
+      //     }
+      //     console.log('isAthreat ', num)
+      //     // if (num) {
+      //     //   console.log('returning ', num)
+      //     //   return record['5'] ? num : 5;
+      //     // }
+      //     // return false;
+      //     return num ? record['5'] ? num : 5 : false;
+      // };
+
+
+
+
+
+
 
 
 // const checkDefense = (record, player) => {

@@ -172,9 +172,12 @@ export class App extends Component{
            
       this.tilesRemain.splice( this.tilesRemain.indexOf(parseInt(logTileId)), 1);   
       this.recordTiles[logTileId] = logPlayer;
+
       console.log('logplayer', logPlayer, this.recordTiles)
+      
       let playsRemain = this.tilesRemain.length;
       let count = 0;
+      console.log(playsRemain, 'playsRemain');
       if(!playsRemain) {
           this.flash = setInterval( () => {
           if(count === 6) {

@@ -136,6 +136,11 @@ html {
     text-shadow: 2px 0 2px lime;
   }
 
+  .flash {
+    color: lime;
+    text-shadow: 2px 0px 2px white;
+  }
+
   @media screen and ( min-height: 1081px ) {
     body {
       -webkit-background-size: cover;

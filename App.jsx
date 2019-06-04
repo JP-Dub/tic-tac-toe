@@ -154,6 +154,10 @@ export class App extends Component{
         });
       };
 
+      const flashTiles = (arr) => {
+        
+      }
+
       const evaluateGameStatus = () => {
         console.log('evaluateGameStatus')
         setTimeout( () => {
@@ -168,17 +172,30 @@ export class App extends Component{
            
       this.tilesRemain.splice( this.tilesRemain.indexOf(parseInt(logTileId)), 1);   
       this.recordTiles[logTileId] = logPlayer;
-      //console.log('logplayer', logPlayer, this.recordTiles)
+      console.log('logplayer', logPlayer, this.recordTiles)
       let playsRemain = this.tilesRemain.length;
-
-      if(!playsRemain) return resetGame();
+      let count = 0;
+      if(!playsRemain) {
+          this.flash = setInterval( () => {
+          if(count === 6) {
+            clearInterval(this.flash);
+            return resetGame();
+          }
+          for(let i = 1; i < 10; i++) {
+            let doc = document.getElementById(i)
+            count%2 ? doc.classList.add('flash') 
+                    : doc.classList.remove('flash');
+          }
+          count++;
+        }, 500);
+      }
       
       if(this.state.unpauseCpu) {
         if(playsRemain <= 4) {
           evaluateGameStatus();
         } else {
           setTimeout(() => {
-            this.cpuHandler(this.recordTiles, this.tilesRemain)
+            this.cpuHandler(this.recordTiles, (9 - playsRemain))
           }, 800);
         }
       }
@@ -187,27 +204,24 @@ export class App extends Component{
     }
     
     // handle cpu response to player 
-    cpuHandler(record, remains) {
-      let [clone, choices] = [[],[]], num = 0, threat;
-      let offense = true;
-      let playedTiles = 9 - remains.length;
-            // make a clone of the arr
-      arr.map( item => clone.push(item.slice()));
-      console.log('remains', remains)
-      const [corner, side] = [[1,3,7,9], [2,4,6,8]];
+    cpuHandler(record, playedTiles) {
+      const [corner, side]   = [[1,3,7,9], [2,4,6,8]],
+            [clone, choices] = [[],[]];
 
-      console.log('...waiting for instruction')
+      let offense = true,
+          num     = 0;
      
       const random = (range) => {
         let milliseconds = new Date().getMilliseconds();
         return Math.floor(milliseconds * range / 1000);
       };
       
-      function checkDefense(record, player) {
-        // let offense = true,
-        const [defense, played, unplayed] = [[], [], []];
-        //const [corner, side] = [[1,3,7,9], [2,4,6,8]];
-      
+      const checkDefense = (record, player) => {
+        const [defense, altDefense, played, unplayed] = [[], [], [], []];
+        let threat;
+        // make a clone of the arr
+        arr.map( item => clone.push(item.slice()));
+        
         const strategy = (isAThreat) => {     
           //looks for strategic plays that give player advantage    
           let num;
@@ -244,28 +258,24 @@ export class App extends Component{
           return num;
         };  
         
-        for(let i =1; i < 10; i++) {
+        // create two arrays for moves played and moves remaining
+        for(let i = 1; i < 10; i++) {
           if(record[i] === player) played.push(i);
           if(!record[i]) unplayed.push(i);
         }
-        // create two arrays for moves played and moves remaining
-        // for(var key in record) {
-        //   if(record[key] === player) played.push(parseInt(key));   
-        //   console.log('sucker', record[key])      
-        //   if(!record[key]) unplayed.push(parseInt(key));
-        // }
-        console.log(played, unplayed, player)
 
         // run function to determin if strategy being set up
-        if(playedTiles < 5) threat = strategy(played);
-        
-        if(threat) {
-          console.log('...threat found, ', threat)
-    
-          if(!record[threat]) return {results: threat,
-                                      offense: offense,
-                                      type: 'threat'};
+        if(playedTiles < 5) { 
+          threat = strategy(played);      
+          if(threat) {        
+            console.log('...threat found, ', threat)
+            if(!record[threat]) return { results: threat,
+                                        offense: offense,
+                                        type: 'threat'
+                                        };
+          }
         }
+
         console.log('...no threat found, continue searching...')
         
         // access winning combos and returns a possible move.
@@ -280,42 +290,52 @@ export class App extends Component{
             }
           }    
 
-          if(count===3) return {type: 'win',
-                                results: arr[i]};
+          if(count===3) return { type: 'win', results: arr[i] };
+
           if(count===2) {
-            console.log('count = 2', clone)
-            if(!record[clone[i][0]]) { // push value left in arr
+            if(!record[clone[i][0]]) { 
               defense.push(clone[i][0]);
               clone[i].splice(0, 1);
               
-              return {results: defense[0],
-                      offense: offense,
-                      type: 'strategy'};
+              return {
+                results: defense[0],
+                offense: offense,
+                type: 'strategy'
+              };
             }  
             
             if(i === 6 || i === 7 ) {        
               for(let i = 2; i < 10; i += 2) {
-                if(!record[i]) defense.push(i)
-              }
-              console.log('...diag strategy found, ', defense)
-              return {results: defense[random(defense.length)],
-                      offense: offense,
-                      type: 'diag strategy'};
+                if(!record[i]) altDefense.push(i);
+              }           
             } 
           } 
         }
+
+        if(altDefense[0]){
+          console.log('...diag strategy found, ', altDefense)
+          return {
+            results: altDefense[random(altDefense.length)],
+            offense: offense,
+            type: 'diag strategy'
+          };
+        }
         
-        console.log('...no offense found', defense)
+        console.log('...no defense found')
         if(offense) {
           offense = false;
-          console.log('...searching defensive move')
-          player = player === 'X' ? 'O' : 'X';
-          checkDefense(record, player);
+          clone.splice(0);
+          player = (player === 'X') ? 'O' : 'X';
+          console.log('...searching ofensive move')
+          return checkDefense(record, player);
         } 
+
         console.log('...no move found, plugging random, ', unplayed)
-        return {results: unplayed[random(unplayed.length)],
-                offense: offense,
-                type: 'random'};
+        return {
+          results: unplayed[random(unplayed.length)],
+          offense: offense,
+          type: 'random'
+        };
       };
            
       console.log(playedTiles, 'playedTiles')
@@ -338,10 +358,10 @@ export class App extends Component{
             num = 5;
           }
           break;         
-    
+          
         default:
-         console.log('default')
-          num = checkDefense(record, this.state.player);
+          console.log('default')
+          num = checkDefense(record, playedTiles < 7 ? this.state.player : this.state.computer);
           
           break;
       }

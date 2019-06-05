@@ -1,15 +1,17 @@
 import React, { Component } from 'react';
-//, { Component }
 //export default ...
 
-      // winning combos
+// winning combos
 const arr = [
       [1,2,3], [4,5,6], [7,8,9],
       [1,4,7], [2,5,8], [3,6,9],
       [1,5,9], [3,5,7] 
       ];
-      
 
+      let monitor = {
+        X : [],
+        O : []
+      }
 
 export class App extends Component{
    constructor(props) {
@@ -24,8 +26,7 @@ export class App extends Component{
         unpauseCpu: false,
         playsFirst: true, // firstMove, goesFirst, movesFirst, startsFirst, playerStarts, winnerStarts, winnerMovesFirst, winnersFirst
         preventClicks: false,
-        prevThreat: false,
-        
+        prevThreat: false,        
       }
 
     }
@@ -36,7 +37,13 @@ export class App extends Component{
         this.player = document.getElementById('selectPlayer');
         this.player.style.marginTop = '-3.55em'
         let num = -3.55;
+        monitor = { X: [], O : [] }
         
+        Object.keys(monitor).forEach(key => {
+          for(let i = 0; i < 8; i++) {
+            monitor[key].push([]);
+          }
+        });
         // animation for selecting player icon
         this.startAnimate = setInterval(() => {
           this.player.style.marginTop = num.toFixed(2) + 'em';  
@@ -99,12 +106,13 @@ export class App extends Component{
           num -= .05;
         }, 8);
       };
+
       this.removeAnimation();
 
       if(!this.state.playsFirst) {
         //this.setState({preventClicks : true}); // validate importance/necessasity
         setTimeout(() => {
-          this.cpuHandler(this.recordTiles, this.tilesRemain);
+          this.cpuHandler(this.recordTiles, 0);
         }, 800);
       } 
 
@@ -123,9 +131,9 @@ export class App extends Component{
           this.state.unpauseCpu = true;
           this.gameLog(player, event.target.id)
         } else if (!player) {
-          alert('Select "X" or "O" to start game'); // convert #title header to message board via error function
+          alert('Select "X" or "O" to start game'); // convert #title header to message board via created error function
         } else {
-          alert('That space is occupied!');
+          alert('That space has already been played!');
         }
       }
       
@@ -133,14 +141,15 @@ export class App extends Component{
     
     // handle cpu and player movements
     gameLog(logPlayer, logTileId) {
-      console.log('gameLog', logPlayer, logTileId)
+      //console.log('gameLog', 'preventClicks',  this.state.preventClicks)
       const resetGame = () => {
         // set tiles to default
         let tiles = document.getElementsByClassName('tile');
 
         for(let i = 0; i < tiles.length; i++) {
           tiles[i].innerHTML = "";
-          tiles[i].style.cssText += 'color: white; text-shadow: 2px 0 2px lime';
+          //tiles[i].style.cssText += 'color: white; text-shadow: 2px 0 2px lime';
+          tiles[i].classList.remove('flash');
         }
 
         this.startAnimation(); // allow player to select new icon
@@ -154,17 +163,12 @@ export class App extends Component{
         });
       };
 
-      const flashTiles = (arr) => {
-        
-      }
-
       const evaluateGameStatus = () => {
         console.log('evaluateGameStatus')
         setTimeout( () => {
           this.cpuHandler(this.recordTiles, this.tilesRemain);
         }, 800);
       };
-
 
       this.setState({
         preventClicks : this.state.preventClicks ? false : true,
@@ -173,26 +177,14 @@ export class App extends Component{
       this.tilesRemain.splice( this.tilesRemain.indexOf(parseInt(logTileId)), 1);   
       this.recordTiles[logTileId] = logPlayer;
 
-      console.log('logplayer', logPlayer, this.recordTiles)
-      
       let playsRemain = this.tilesRemain.length;
-      let count = 0;
-      console.log(playsRemain, 'playsRemain');
-      if(!playsRemain) {
-          this.flash = setInterval( () => {
-          if(count === 6) {
-            clearInterval(this.flash);
-            return resetGame();
-          }
-          for(let i = 1; i < 10; i++) {
-            let doc = document.getElementById(i)
-            count%2 ? doc.classList.add('flash') 
-                    : doc.classList.remove('flash');
-          }
-          count++;
-        }, 500);
-      }
       
+      if(!playsRemain) {       
+        return this.flashTiles(10, () => {
+          resetGame();
+        })
+      }
+      console.log('playsRemain', playsRemain)
       if(this.state.unpauseCpu) {
         if(playsRemain <= 4) {
           evaluateGameStatus();
@@ -202,8 +194,24 @@ export class App extends Component{
           }, 800);
         }
       }
-      
-      //console.log(this.recordTiles, this.tilesRemain)
+
+    }
+
+    flashTiles(total, next){
+      let count = 0;
+      let flash = setInterval( () => {
+        if(count === 6) {
+          clearInterval(flash);
+          return next();
+        }
+ 
+        for(let i = 1; i < total; i++) {
+          let doc = document.getElementById(i);        
+          count % 2 ? doc.classList.add('flash') 
+                    : doc.classList.remove('flash');
+        }
+        count++;
+      }, 500);
     }
     
     // handle cpu response to player 
@@ -211,7 +219,8 @@ export class App extends Component{
       const [corner, side]   = [[1,3,7,9], [2,4,6,8]],
             [clone, choices] = [[],[]];
 
-      let offense = true,
+      let diagStrategy,
+          offense = true,
           num     = 0;
      
       const random = (range) => {
@@ -225,6 +234,7 @@ export class App extends Component{
         // make a clone of the arr
         arr.map( item => clone.push(item.slice()));
         
+        // look for strategic moves
         const strategy = (isAThreat) => {     
           //looks for strategic plays that give player advantage    
           let num;
@@ -283,12 +293,19 @@ export class App extends Component{
         
         // access winning combos and returns a possible move.
         for(var i = 0; i < clone.length; i++) {
-          var count = 0;
-          for(var j = 0; j < clone[i].length; j++) {
+          var count = 0;         
+          for(var j = 0; j < clone[i].length; j++) {           
             for(var k = 0; k < played.length; k++) {
               if(clone[i][j] === played[k]) {
                 count++;
+                // for(var l = 0; l < unplayed.length; l++) {
+                //   if(unplayed[i] !== clone[i][j]) {
+                //     monitor[player][i].push(clone[i][j]);
+                //   }
+                // }
+                console.log('recordTiles', record)
                 clone[i].splice(j, 1);
+                
               }
             }
           }    
@@ -303,7 +320,8 @@ export class App extends Component{
               return {
                 results: defense[0],
                 offense: offense,
-                type: 'strategy'
+                type: 'strategy',
+                player: player
               };
             }  
             
@@ -320,7 +338,8 @@ export class App extends Component{
           return {
             results: altDefense[random(altDefense.length)],
             offense: offense,
-            type: 'diag strategy'
+            type: 'diag strategy',
+            player: player
           };
         }
         
@@ -337,15 +356,16 @@ export class App extends Component{
         return {
           results: unplayed[random(unplayed.length)],
           offense: offense,
-          type: 'random'
+          type: 'random',
+          player: player
         };
       };
-           
-      console.log(playedTiles, 'playedTiles')
+      console.log('playedTiles', playedTiles, typeof playedTiles)     
       //logical operations for computer to play based on the first few plays
       switch (playedTiles) {
         case 0:
-          // if cpu starts game        
+          // if cpu starts game  
+          console.log('computer first move')      
           num = corner[random(corner.length)];
           break; 
 
@@ -363,13 +383,11 @@ export class App extends Component{
           break;         
           
         default:
-          console.log('default')
-          num = checkDefense(record, playedTiles < 7 ? this.state.player : this.state.computer);
-          
+          num = checkDefense(record, this.state.player); //playedTiles < 7 ? this.state.player : this.state.computer         
           break;
       }
 
-      console.log(num, typeof num)
+      console.log(num)
       if(typeof num === 'object') {
         num = num.results;
       }
@@ -380,7 +398,7 @@ export class App extends Component{
       //     if(!num) num = remains[random(remains.length)];
       //   }
       // }   
-            
+      console.log('monitor', monitor)      
       document.getElementById(num).innerHTML = this.state.computer;
       this.state.unpauseCpu = false;
       //console.log(this.state.computer, num)
@@ -405,7 +423,7 @@ export class App extends Component{
     }
 }
 
-  // Construct gameboard and podium
+// Construct gameboard and podium
 const Gameboard = (props) => {
 
    const buildTable = (tableData) => {
@@ -413,7 +431,6 @@ const Gameboard = (props) => {
        return (
          <td key   = {idx}
              id    = {num}
-             value = ''
              className = 'tile'
              onClick   = {props.clickHandler} />
        );
@@ -437,7 +454,7 @@ const Gameboard = (props) => {
     );
 }
  
-   // Error class React Component
+// Error class React Component
 class ErrorBoundary extends React.Component {
    constructor(props) {
      super(props);
@@ -467,6 +484,24 @@ class ErrorBoundary extends React.Component {
    };
 }; 
 
+
+// const flashTiles = (total, next) => {
+//   let count = 0;
+//   let flash = setInterval( () => {
+//     console.log('interval set')
+//     if(count === 6) {
+//       clearInterval(flash);
+//       next();
+//     }
+//     for(let i = 1; i < total; i++) {
+//       console.log(i, ' = 1')
+//       let doc = document.getElementById(i)
+//       count % 2 ? doc.classList.add('flash') 
+//                 : doc.classList.remove('flash');
+//     }
+//     count++;
+//   }, 500);
+// }
 
 
 // const random = (range) => {

@@ -100,30 +100,6 @@ export class App extends Component{
       
       let click = icon.target.innerHTML;
 
-      this.recordTiles = {};
-      this.tilesRemain = [1,2,3,4,5,6,7,8,9];
-
-      //this.board = {};
-
-      // this.createBoard = (() => {
-      //   return {
-      //     Board : () => {
-      //       this.board = {
-      //         played : [],
-      //         remain : [1,2,3,4,5,6,7,8,9],
-      //         project: {},
-      //         data: {}
-      //       }
-      //     },
-      //     Init: function() {
-      //       this.Board();
-      //     }
-      //   }
-      // })();
-      // this.createBoard.Init();      
-      //this.createBoard.Init();
-      //console.log(this.board)
-
       arr.map( item => copy.push(item.slice()));
 
       this.setState({
@@ -177,6 +153,8 @@ export class App extends Component{
     
     // handle cpu and player movements consider changing to gameCPU
     gameLog(logPlayer, logTileId) {
+      let project = this.board.project;
+      //
       // logPlayer = X or O, logTileId = typeof number 1-9
       const resetGame = () => {
         
@@ -207,45 +185,45 @@ export class App extends Component{
       this.setState({
         preventClicks : this.state.preventClicks ? false : true,
       });
-           
+
       // remove selected tile number and add to recordTiles Object
-      this.tilesRemain.splice( this.tilesRemain.indexOf(parseInt(logTileId)), 1);   
-      this.recordTiles[logTileId] = logPlayer;
-
-      // acquire new length of remaining tile array
-      let playsRemain = this.tilesRemain.length;
-
       this.board.data[logTileId] = logPlayer;
-      this.board.played.push(logTileId);
+      this.board.played.unshift(logTileId);
       this.board.remain.splice(this.board.remain.indexOf(parseInt(logTileId)), 1); 
+
+      [project.player, project.computer] = [[],[]]
 
       // cloned array - replace number with player icon and count for strategy or win
       for(let a = 0; a < copy.length; a++) {
         let count = 0, compCount = 0;
         for(let b = 0; b < copy[a].length; b++) {
           if(copy[a][b] === logTileId) copy[a].splice(b, 1, logPlayer);
-          if(copy[a][b] === this.state.player) count++;
+          if(copy[a][b] === this.state.player  ) count++;
           if(copy[a][b] === this.state.computer) compCount++;
+          if(b === copy[a].length-1) console.log(count, compCount, copy[a])
         }
-
+        
         // alerts a win
         if(count === 3 || compCount === 3) {
           return this.flashTiles(arr[a], () => {
             resetGame();
           });         
         }
-        // alerts player to possible win
+
+        // alerts of possible player win
         if(count === 2 ) {
-          if(!compCount)  this.board.project['player'] = copy[a];
+          //console.log('count', count, compCount, 'compCount')
+          if(!compCount) project['player'] = copy[a];
         }
 
         // alerts computer to possible win
         if(compCount === 2) {
-          if(!count) this.board.project['computer'] = copy[a];
+         // console.log('compCount', compCount, count, 'count')
+          if(!count) project['computer'] = copy[a];
         }
 
       }
-      console.log('gameLog', this.board)
+      
       // alert for no plays left - reset board
       if(!this.board.remain.length) { 
         this.createBoard.Init()      
@@ -257,13 +235,14 @@ export class App extends Component{
       // pauses cpu loop - wait for player move
       if(this.state.unpauseCpu) {
           setTimeout(() => {
-            this.cpuHandler(this.recordTiles, (9 - this.board.remain.length))
+            this.cpuHandler()
           }, 800);
       }
 
     }
 
     flashTiles(total, next){
+      console.log('total', total)
       let count = 0, length;
 
       let flash = setInterval( () => {
@@ -282,34 +261,35 @@ export class App extends Component{
     }
     
     // handle cpu response to player 
-    cpuHandler(record, playedTiles) {
+    cpuHandler() {
+      const corner   = [1,3,7,9],
+            forecast = this.board.project,
+            played   = this.board.played,
+            remains  = this.board.remain,
+            data     = this.board.data
       
-      const [corner, side]   = [[1,3,7,9], [2,4,6,8]],
-            [clone, choices] = [[],[]];
-      
-      let forecast = this.board.project
-      
-      let offense = true,
-          num     = 0;
+      let num = 0;
       
       const random = (range) => {
         let milliseconds = new Date().getMilliseconds();
         return Math.floor(milliseconds * range / 1000);
       };
-      console.log('record', record, playedTiles, 'playedTiels')
-      console.log('board' , this.board)
-      const checkDefense = (record, player) => {
-        const [defense, altDefense, played, unplayed] = [[], [], [], []];
-        let threat;
-        console.log('board' , this.board)
+
+      const checkDefense = (player) => {
+        const played = [];
+
         // make a clone of the arr
-        arr.map( item => clone.push(item.slice()));
+        //arr.map( item => clone.push(item.slice()));
         
         // look for strategic moves
-        const strategy = (isAThreat) => {     
+        const strategy = () => {     
           //looks for strategic plays that give player advantage    
-          let num;
-      
+          let isAThreat = [], num;
+
+          for(let i = 1; i < 10; i++) {
+            if(data[i] === player) isAThreat.push(i);
+          }          
+
           for (var i = 0; i < isAThreat.length; i++) {
             for (var j = isAThreat.length-1; j > 0; j--) {
               if (
@@ -320,20 +300,20 @@ export class App extends Component{
                 num = 1; }
               
               if (
-                (isAThreat[i] === 2 && isAThreat[j] === 6) ||
                 (isAThreat[i] === 1 && isAThreat[j] === 6) ||
+                (isAThreat[i] === 2 && isAThreat[j] === 6) ||
                 (isAThreat[i] === 2 && isAThreat[j] === 9)
               ) { num = 3; }
                     
               if (
-                (isAThreat[i] === 4 && isAThreat[j] === 8) ||
                 (isAThreat[i] === 1 && isAThreat[j] === 8) ||
+                (isAThreat[i] === 4 && isAThreat[j] === 8) ||
                 (isAThreat[i] === 4 && isAThreat[j] === 9)
               ) { num = 7; }
               
               if (
-                (isAThreat[i] === 6 && isAThreat[j] === 8) ||
                 (isAThreat[i] === 3 && isAThreat[j] === 8) ||
+                (isAThreat[i] === 6 && isAThreat[j] === 8) ||
                 (isAThreat[i] === 6 && isAThreat[j] === 7)
               ) { num = 9; }
             }
@@ -343,22 +323,18 @@ export class App extends Component{
         };  
         
         // create two arrays for moves played and moves remaining
-        for(let i = 1; i < 10; i++) {
-          if(record[i] === player) played.push(i);
-          if(!record[i]) unplayed.push(i);
-        }
 
-        // run function to determin if strategy being set up
-        if(playedTiles < 5) { 
-          threat = strategy(played);      
-          if(threat) {        
-            if(!record[threat]) return { results: threat,
-                                         offense: offense,
-                                         type: 'threat'
-                                        };
-          }
-        }
-       
+        // // run function to determin if strategy being set up
+        // if(played.length < 5) { 
+        //   let threat = strategy();      
+        //   if(threat) {        
+        //     if(!data[threat]) return { results: threat,
+        //                                type: 'threat'
+        //                               };
+        //   }
+        // }
+       console.log('forecast', forecast)
+        // analyse the plays and look to win first, defend second
         if(forecast['player'] || forecast['computer'] ) {
           var keys = Object.keys(forecast);
          
@@ -376,9 +352,9 @@ export class App extends Component{
               }              
             }
           }
-        };
+        };     
 
-        console.log('forecast', forecast)
+        //console.log('forecast', forecast)
         if(forecast.win) {
           return {
             results : forecast.win,
@@ -393,15 +369,24 @@ export class App extends Component{
           }
         }
 
+        // run function to determin if strategy being set up
+        if(played.length < 5) { 
+          let threat = strategy();      
+          if(threat) {        
+            if(!data[threat]) return { results: threat,
+                                       type: 'threat'
+                                      };
+          }
+        }   
+
         return {
-          results: unplayed[random(unplayed.length)],
-          offense: offense,
+          results: remains[random(remains.length)],
           type: 'random',
         };
       };
    
       //logical operations for computer to play based on the first few plays
-      switch (playedTiles) {
+      switch (played.length) {
         case 0:
           // if cpu starts game  
           console.log('computer first move')      
@@ -411,9 +396,9 @@ export class App extends Component{
         case 1:
           // if cpu doesn't start game: play corner if 5 is already played
           let temp = [];         
-          if(record['5']) {
-            for(let i = 0; i < corner.length; i++) {
-              if(!record[i]) temp.push(corner[i]);
+          if(data['5']) {
+            for(let i = 2; i < 10; i+=2) {
+              if(!data[i]) temp.push(i);
               num = temp[random(temp.length)];
             }
           } else {
@@ -422,15 +407,15 @@ export class App extends Component{
           break;         
           
         default:
-          num = checkDefense(record, this.state.player);         
+          num = checkDefense(this.state.player);         
           break;
       }
 
-      console.log('num', num)
+      //console.log('number object returned', num)
       if(typeof num === 'object') {
         num = num.results;
       }
-         
+      console.log('cpuHandler', this.board)   
       document.getElementById(num).innerHTML = this.state.computer;
       this.state.unpauseCpu = false;
       this.gameLog(this.state.computer, num)

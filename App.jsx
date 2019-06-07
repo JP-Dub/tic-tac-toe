@@ -2,13 +2,13 @@ import React, { Component } from 'react';
 //export default ...
 
 // winning combos
-const arr = [
-      [1,2,3], [4,5,6], [7,8,9],
-      [1,4,7], [2,5,8], [3,6,9],
-      [1,5,9], [3,5,7] 
+const [copy, arr] = [ [],
+      [ [1,2,3], [4,5,6], [7,8,9],
+        [1,4,7], [2,5,8], [3,6,9],
+        [1,5,9], [3,5,7], ],
       ];
 
-let copy = [];
+
       
 
 export class App extends Component{
@@ -200,37 +200,33 @@ export class App extends Component{
           if(copy[a][b] === logTileId) copy[a].splice(b, 1, logPlayer);
           if(copy[a][b] === this.state.player  ) count++;
           if(copy[a][b] === this.state.computer) compCount++;
-          if(b === copy[a].length-1) console.log(count, compCount, copy[a])
+          //if(b === copy[a].length-1) console.log(count, compCount, copy[a])
         }
         
         // alerts a win
         if(count === 3 || compCount === 3) {
+          console.log('count of 3, count = ', count, ' compCount = ', compCount, arr[a])
           return this.flashTiles(arr[a], () => {
+            this.createBoard.Init();
             resetGame();
           });         
         }
 
         // alerts of possible player win
         if(count === 2 && !compCount ) {
-          //console.log('count', count, compCount, 'compCount')
-         // if(!compCount)
-         console.log('pushed player', copy[a])
            project['player'] = copy[a];
         }
 
         // alerts computer to possible win
         if(compCount === 2 && ! count) {
-         // console.log('compCount', compCount, count, 'count')
-          //if(!count) 
-          console.log('pushed computer', copy[a])
           project['computer'] = copy[a];
         }
 
       }
-      
+      console.log('Board', this.board)
       // alert for no plays left - reset board
       if(!this.board.remain.length) { 
-        this.createBoard.Init()      
+        this.createBoard.Init();      
         return this.flashTiles(this.board.remain, () => {
           resetGame();
         })
@@ -246,8 +242,7 @@ export class App extends Component{
     }
 
     flashTiles(total, next){
-      console.log('total', total)
-      let count = 0, length;
+      let count = 0;
 
       let flash = setInterval( () => {
         if(count === 6) {
@@ -281,9 +276,7 @@ export class App extends Component{
 
       const checkDefense = (player) => {
         const played = [];
-
-        // make a clone of the arr
-        //arr.map( item => clone.push(item.slice()));
+        let win, block;
         
         // look for strategic moves
         const strategy = () => {     
@@ -326,35 +319,22 @@ export class App extends Component{
           return num;
         };  
         
-        // create two arrays for moves played and moves remaining
-
-        // // run function to determin if strategy being set up
-        // if(played.length < 5) { 
-        //   let threat = strategy();      
-        //   if(threat) {        
-        //     if(!data[threat]) return { results: threat,
-        //                                type: 'threat'
-        //                               };
-        //   }
-        // }
-
-       let win, block;
         // analyse the plays and look to win first, defend second
         if(forecast['player'].length || forecast['computer'].length ) {
           var keys = Object.keys(forecast);
          
           for(var i = 0; i < keys.length; i++) {
             for(var j=0; j < forecast[keys[i]].length; j++ ) {
-              num = forecast[keys[i]][j];
+              let value = forecast[keys[i]][j];
               
-              if(typeof num === 'number' ) {
+              if(typeof value === 'number' ) {
                 if(keys[i] === 'player') {
                   //forecast['block'] = num;
-                  block = num;
+                  block = value;
                 }
                 if(keys[i] === 'computer') {
                   //forecast['win'] = num;
-                  win = num;
+                  win = value;
                 }
               }              
             }
@@ -368,6 +348,16 @@ export class App extends Component{
           }
         }
 
+        // run function to determin if strategy being set up
+        if(played.length) { 
+          let threat = strategy();      
+          if(threat && !data[threat]) {        
+            return { results: threat,
+                     type: 'threat'
+                   };
+          }
+        }   
+
         if(block) {
           return {
             results : block,
@@ -375,15 +365,15 @@ export class App extends Component{
           }
         }
 
-        // run function to determin if strategy being set up
-        if(played.length < 5) { 
-          let threat = strategy();      
-          if(threat) {        
-            if(!data[threat]) return { results: threat,
-                                       type: 'threat'
-                                      };
-          }
-        }   
+        // // run function to determin if strategy being set up
+        // if(played.length < 5) { 
+        //   let threat = strategy();      
+        //   if(threat) {        
+        //     if(!data[threat]) return { results: threat,
+        //                                type: 'threat'
+        //                               };
+        //   }
+        // }   
 
         return {
           results: remains[random(remains.length)],

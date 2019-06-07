@@ -143,7 +143,7 @@ export class App extends Component{
           this.id = document.getElementById(evt.target.id);
           this.id.innerHTML = player;
           this.state.unpauseCpu = true;
-          this.gameCpu(player, parseInt(event.target.id))
+          this.gameHandler(player, parseInt(event.target.id))
         } else if (!player) {
           alert('Select "X" or "O" to start game'); // convert #title header to message board via created error function
         } else {
@@ -152,9 +152,14 @@ export class App extends Component{
       }
       
     }
+
+    // handle error messages
+    errorHandler() {
+
+    }
     
-    // handle cpu and player movements consider changing to gameCPU
-    gameCpu(logPlayer, logTileId) {
+    // handle cpu and player movements 
+    gameHandler(logPlayer, logTileId) {
       let project = this.board.project;
       
       // logPlayer = X or O, logTileId = typeof number 1-9
@@ -209,7 +214,7 @@ export class App extends Component{
         // alerts the game is won - reset board
         if(count === 3 || compCount === 3) {
           let winnerPlaysFirst = this.state.player === logPlayer ? true : false;
-          return this.flashWinningTiles(arr[a], () => {
+          return this.highlightWin(arr[a], () => {
             winnerPlaysFirst ? this.setState( state => {return {win: state.win + 1}}) 
                              : this.setState( state => {return {lose: state.lose + 1}})                         
     
@@ -230,15 +235,15 @@ export class App extends Component{
 
       }
       
-      // alerts the game is a draw - reset board
+      // alerts the game is a draw (tie) - reset board
       if(!this.board.remain.length) { 
         this.createBoard.Init();
         
         let first = this.state.playsFirst === true ? false : true;   
         
-        return this.highlightTiles('on', () => {
+        return this.highlightTie('on', () => {
           setTimeout(() => {
-            this.highlightTiles('off');
+            this.highlightTie('off');
             this.setState( state => {return {tie: state.tie +1}})
             resetGame(first);
           }, 2000);
@@ -255,16 +260,18 @@ export class App extends Component{
 
     }
 
-    highlightTiles(flash, next) {
+    // highlight all tiles for a tie
+    highlightTie(engage, next) {
       for(let i = 1; i < 10; i++) {
         let doc = document.getElementById(i);
-        if(flash === 'on') doc.classList.add('flash');
-        if(flash === 'off') doc.classList.remove('flash'); 
+        if(engage === 'on') doc.classList.add('flash');
+        if(engage === 'off') doc.classList.remove('flash'); 
       }
-      if(flash === 'on') return next();
+      if(engage === 'on') return next();
     }
 
-    flashWinningTiles(combo, next){
+    // flash winning tile column
+    highlightWin(combo, next){
       let count = 0;
 
       let flash = setInterval( () => {
@@ -431,7 +438,7 @@ export class App extends Component{
      
       document.getElementById(num).innerHTML = this.state.computer;
       this.state.unpauseCpu = false;
-      this.gameCpu(this.state.computer, num)
+      this.gameHandler(this.state.computer, num)
     }
     
     render() {

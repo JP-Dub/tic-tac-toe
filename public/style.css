@@ -91,7 +91,9 @@ html {
     height: 1.25em;
     width: 16em;
     background: rgba(83, 172, 86, 0.75);
-
+    -webkit-border-radius: .5em;
+       -moz-border-radius: .5em;    
+            border-radius: .5em;
   }
 
   .hideScore {

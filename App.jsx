@@ -211,15 +211,19 @@ export class App extends Component{
         }
 
         // alerts of possible player win
-        if(count === 2 ) {
+        if(count === 2 && !compCount ) {
           //console.log('count', count, compCount, 'compCount')
-          if(!compCount) project['player'] = copy[a];
+         // if(!compCount)
+         console.log('pushed player', copy[a])
+           project['player'] = copy[a];
         }
 
         // alerts computer to possible win
-        if(compCount === 2) {
+        if(compCount === 2 && ! count) {
          // console.log('compCount', compCount, count, 'count')
-          if(!count) project['computer'] = copy[a];
+          //if(!count) 
+          console.log('pushed computer', copy[a])
+          project['computer'] = copy[a];
         }
 
       }
@@ -333,9 +337,10 @@ export class App extends Component{
         //                               };
         //   }
         // }
-       console.log('forecast', forecast)
+
+       let win, block;
         // analyse the plays and look to win first, defend second
-        if(forecast['player'] || forecast['computer'] ) {
+        if(forecast['player'].length || forecast['computer'].length ) {
           var keys = Object.keys(forecast);
          
           for(var i = 0; i < keys.length; i++) {
@@ -344,27 +349,28 @@ export class App extends Component{
               
               if(typeof num === 'number' ) {
                 if(keys[i] === 'player') {
-                  forecast['block'] = num;
+                  //forecast['block'] = num;
+                  block = num;
                 }
                 if(keys[i] === 'computer') {
-                  forecast['win'] = num;
+                  //forecast['win'] = num;
+                  win = num;
                 }
               }              
             }
           }
         };     
 
-        //console.log('forecast', forecast)
-        if(forecast.win) {
+        if(win) {
           return {
-            results : forecast.win,
+            results : win,
             type: 'win',
           }
         }
 
-        if(forecast.block) {
+        if(block) {
           return {
-            results : forecast.block,
+            results : block,
             type: 'block'
           }
         }
@@ -411,11 +417,12 @@ export class App extends Component{
           break;
       }
 
+      console.log('cpuHandler', num)   
       //console.log('number object returned', num)
       if(typeof num === 'object') {
         num = num.results;
       }
-      console.log('cpuHandler', this.board)   
+     
       document.getElementById(num).innerHTML = this.state.computer;
       this.state.unpauseCpu = false;
       this.gameLog(this.state.computer, num)

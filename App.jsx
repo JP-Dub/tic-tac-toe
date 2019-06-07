@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 //export default ...
 
 // winning combos
-const [copy, arr] = [ [],
+const [clone, arr] = [ [],
       [ [1,2,3], [4,5,6], [7,8,9],
         [1,4,7], [2,5,8], [3,6,9],
         [1,5,9], [3,5,7], ],
@@ -95,10 +95,11 @@ export class App extends Component{
     // select 'X' or 'O' to start game
     selectPlayer(icon) {
       icon.preventDefault();
-      
+      console.log({'playsFirst': this.state.playsFirst,
+    'preventClicks': this.state.preventClicks})
       //let click = icon.target.innerHTML;
 
-      arr.map( item => copy.push(item.slice()));
+      arr.map( item => clone.push(item.slice()));
 
       this.setState({
         player   : icon.target.innerHTML,
@@ -146,10 +147,10 @@ export class App extends Component{
     // handle cpu and player movements consider changing to gameCPU
     gameCpu(logPlayer, logTileId) {
       let project = this.board.project;
-      //
+      
       // logPlayer = X or O, logTileId = typeof number 1-9
       const resetGame = (winner) => {
-        
+        let clicks = winner ? false: true;
         // set tiles to default
         let tiles = document.getElementsByClassName('tile');
         for(let i = 0; i < tiles.length; i++) {
@@ -157,8 +158,8 @@ export class App extends Component{
           tiles[i].classList.remove('flash');
         }
         
-        // empty contents of copied arr
-        copy.splice(0);
+        // empty contents of cloned arr
+        clone.splice(0);
         
         // activate select player div
         this.startAnimation(); 
@@ -168,8 +169,8 @@ export class App extends Component{
           player  : '',
           computer: '',
           unpauseCpu: true,
-          playsFirst: winner, // plan to rm from reset or change to variable
-          preventClicks: true,
+          playsFirst: winner,
+          preventClicks: clicks,
         });
       };
 
@@ -186,32 +187,31 @@ export class App extends Component{
       [project.player, project.computer] = [[],[]]
 
       // cloned array - replace number with player icon and count for strategy or win
-      for(let a = 0; a < copy.length; a++) {
+      for(let a = 0; a < clone.length; a++) {
         let count = 0, compCount = 0;
-        for(let b = 0; b < copy[a].length; b++) {
-          if(copy[a][b] === logTileId) copy[a].splice(b, 1, logPlayer);
-          if(copy[a][b] === this.state.player  ) count++;
-          if(copy[a][b] === this.state.computer) compCount++;
-          //if(b === copy[a].length-1) console.log(count, compCount, copy[a])
+        for(let b = 0; b < clone[a].length; b++) {
+          if(clone[a][b] === logTileId) clone[a].splice(b, 1, logPlayer);
+          if(clone[a][b] === this.state.player  ) count++;
+          if(clone[a][b] === this.state.computer) compCount++;
         }
         
         // alerts a win
         if(count === 3 || compCount === 3) {
-          let winnerPlayFirst = this.state.player === logPlayer ? true: false;
+          let winnerPlaysFirst = this.state.player === logPlayer ? true: false;
           return this.flashTiles(arr[a], () => {
             this.createBoard.Init();
-            resetGame(winnerPlayFirst);
+            resetGame(winnerPlaysFirst);
           });         
         }
 
         // alerts of possible player win
         if(count === 2 && !compCount ) {
-           project['player'] = copy[a];
+           project['player'] = clone[a];
         }
 
         // alerts computer to possible win
         if(compCount === 2 && ! count) {
-          project['computer'] = copy[a];
+          project['computer'] = clone[a];
         }
 
       }
@@ -220,10 +220,11 @@ export class App extends Component{
       
       // alert for no plays left - reset board
       if(!this.board.remain.length) { 
-        this.createBoard.Init();      
+        this.createBoard.Init();
+        let first = this.state.playsFirst === true ? false : true;   
         return this.flashTiles(this.board.remain, () => {
-          resetGame();
-        })
+          resetGame(first);
+        });
       }
       
       // pauses cpu loop - wait for player move

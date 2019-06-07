@@ -198,7 +198,7 @@ export class App extends Component{
         // alerts a win
         if(count === 3 || compCount === 3) {
           let winnerPlaysFirst = this.state.player === logPlayer ? true: false;
-          return this.flashTiles(arr[a], () => {
+          return this.flashWinningTiles(arr[a], () => {
             this.createBoard.Init();
             resetGame(winnerPlaysFirst);
           });         
@@ -222,8 +222,12 @@ export class App extends Component{
       if(!this.board.remain.length) { 
         this.createBoard.Init();
         let first = this.state.playsFirst === true ? false : true;   
-        return this.flashTiles(this.board.remain, () => {
-          resetGame(first);
+        return this.highlightTiles('on', () => {
+          setTimeout(() => {
+            this.highlightTiles('off');
+            resetGame(first);
+          }, 2000);
+          
         });
       }
       
@@ -236,7 +240,16 @@ export class App extends Component{
 
     }
 
-    flashTiles(total, next){
+    highlightTiles(flash, next) {
+      for(let i = 1; i < 10; i++) {
+        let doc = document.getElementById(i);
+        if(flash === 'on') doc.classList.add('flash');
+        if(flash === 'off') doc.classList.remove('flash'); 
+      }
+      if(flash === 'on') return next();
+    }
+
+    flashWinningTiles(combo, next){
       let count = 0;
 
       let flash = setInterval( () => {
@@ -245,8 +258,8 @@ export class App extends Component{
           return next();
         }
         
-        for(let i = 0; i < total.length; i++) {
-          let doc = document.getElementById(total[i]);        
+        for(let i = 0; i < combo.length; i++) {
+          let doc = document.getElementById(combo[i]);        
           count % 2 ? doc.classList.add('flash') 
                     : doc.classList.remove('flash');
         }

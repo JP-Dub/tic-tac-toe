@@ -16,10 +16,13 @@ export class App extends Component{
       this.clickHandler = this.clickHandler.bind(this);
       
       this.state = {
+        win        : 0,
+        tie        : 0,
+        lose       : 0,
         player     : '',
         computer   : '',
         unpauseCpu : false,
-        playsFirst : true, // firstMove, goesFirst, movesFirst, startsFirst, playerStarts, winnerStarts, winnerMovesFirst, winnersFirst
+        playsFirst : true,
         preventClicks: false,     
       }
 
@@ -27,7 +30,9 @@ export class App extends Component{
     
     componentDidMount() {
       // animation used to display player character selection - called in clickHandler() too
+      
       this.startAnimation = () => {
+        document.getElementById('scoreboard').classList.add('hideScore');
         // starts selectPlayer behind Title 
         this.player = document.getElementById('selectPlayer');
         this.player.style.marginTop = '-3.55em'
@@ -96,7 +101,7 @@ export class App extends Component{
     selectPlayer(icon) {
       icon.preventDefault();
       console.log({'playsFirst': this.state.playsFirst,
-    'preventClicks': this.state.preventClicks})
+                   'preventClicks': this.state.preventClicks})
       //let click = icon.target.innerHTML;
 
       arr.map( item => clone.push(item.slice()));
@@ -106,12 +111,16 @@ export class App extends Component{
         computer : icon.target.innerHTML === 'X' ? 'O' : 'X'
       });
       
+      // retract selectPlayer Div post icon selection
       let size = 0;
       this.player.style.zIndex = '-1';
 
       this.endAnimate = setInterval( () => {
         this.player.style.marginTop = size.toFixed(2) + 'em';
-        if( size.toFixed(2) <= -3.55) return clearInterval(this.endAnimate);
+        if( size.toFixed(2) <= -3.55) {
+          document.getElementById('scoreboard').classList.remove('hideScore');
+          return clearInterval(this.endAnimate);
+        }
         size -= .05;
       }, 8);     
       
@@ -151,6 +160,7 @@ export class App extends Component{
       // logPlayer = X or O, logTileId = typeof number 1-9
       const resetGame = (winner) => {
         let clicks = winner ? false: true;
+        
         // set tiles to default
         let tiles = document.getElementsByClassName('tile');
         for(let i = 0; i < tiles.length; i++) {
@@ -174,16 +184,17 @@ export class App extends Component{
         });
       };
 
-      // ?? verify player clicks are prevented if computer is going first
+      // clicks are prevented if computer is making the play
       this.setState({
         preventClicks : this.state.preventClicks ? false : true,
       });
 
-      // remove selected tile number and add to recordTiles Object
+      // log played tiles and player - put used tileId in board.played arr - remove tileId from board.remain arr
       this.board.data[logTileId] = logPlayer;
       this.board.played.unshift(logTileId);
       this.board.remain.splice(this.board.remain.indexOf(parseInt(logTileId)), 1); 
 
+      // empty arr contents
       [project.player, project.computer] = [[],[]]
 
       // cloned array - replace number with player icon and count for strategy or win
@@ -195,36 +206,40 @@ export class App extends Component{
           if(clone[a][b] === this.state.computer) compCount++;
         }
         
-        // alerts a win
+        // alerts the game is won - reset board
         if(count === 3 || compCount === 3) {
-          let winnerPlaysFirst = this.state.player === logPlayer ? true: false;
+          let winnerPlaysFirst = this.state.player === logPlayer ? true : false;
           return this.flashWinningTiles(arr[a], () => {
+            winnerPlaysFirst ? this.setState( state => {return {win: state.win + 1}}) 
+                             : this.setState( state => {return {lose: state.lose + 1}})                         
+    
             this.createBoard.Init();
             resetGame(winnerPlaysFirst);
           });         
         }
 
-        // alerts of possible player win
+        // alerts cpu to block
         if(count === 2 && !compCount ) {
-           project['player'] = clone[a];
+           project.player = clone[a];
         }
 
-        // alerts computer to possible win
+        // alerts cpu of win
         if(compCount === 2 && ! count) {
-          project['computer'] = clone[a];
+          project.computer = clone[a];
         }
 
       }
       
-      //console.log('Board', this.board)
-      
-      // alert for no plays left - reset board
+      // alerts the game is a draw - reset board
       if(!this.board.remain.length) { 
         this.createBoard.Init();
+        
         let first = this.state.playsFirst === true ? false : true;   
+        
         return this.highlightTiles('on', () => {
           setTimeout(() => {
             this.highlightTiles('off');
+            this.setState( state => {return {tie: state.tie +1}})
             resetGame(first);
           }, 2000);
           
@@ -283,7 +298,6 @@ export class App extends Component{
       };
 
       const checkDefense = (player) => {
-        //const played = [];
         let win, block;
         
         // look for strategic moves
@@ -346,7 +360,9 @@ export class App extends Component{
             }
           }
         };     
+
         console.log('forecast', forecast, win, block)
+
         if(win) {
           return {
             results : win,
@@ -354,7 +370,7 @@ export class App extends Component{
           }
         }
 
-        // run function to determin if strategy being set up
+        // determin if strategy being set up - will only run once
         if(forecast.threat) { 
           console.log('assess threat')
           forecast.threat = false;
@@ -373,6 +389,7 @@ export class App extends Component{
           }
         }  
 
+        // if all else fails, return random number from remain arr
         return {
           results: remains[random(remains.length)],
           type: 'random',
@@ -406,7 +423,8 @@ export class App extends Component{
       }
 
       console.log('cpuHandler return', num)   
-
+      
+      // num returns both number and object, check for which is being returned
       if(typeof num === 'object') {
         num = num.results;
       }
@@ -426,8 +444,13 @@ export class App extends Component{
             <p>Please Select "X" or "O"</p>
             <button id="x" onClick={this.selectPlayer}>X</button>
             <span id='addSpace' />
-            <button id="o" onClick={this.selectPlayer}>O</button>     
-          </div> 
+            <button id="o" onClick={this.selectPlayer}>O</button>
+            <div id='scoreboard'>
+            <div id='w' className='score'>Win:<span id='win'>{this.state.win}</span></div>
+            <div id='t' className='score'>Tie:<span id='tie'>{this.state.tie}</span></div>     
+            <div id='l' className='score'>Lose:<span id='lose'>{this.state.lose}</span></div>
+          </div>
+         </div> 
          <Gameboard clickHandler={this.clickHandler}/>
         </ErrorBoundary>
         );

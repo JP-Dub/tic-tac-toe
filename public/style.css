@@ -7,7 +7,7 @@ html {
   }
   
    body {
-    background: darkgrey url("./image/background.jpg") no-repeat center/1920px 1080px;    
+    background: darkgrey url("./image/background.jpg") no-repeat center/1920px 1080px;   
     height: 95vh;
     width: 95vw;
   }
@@ -83,6 +83,26 @@ html {
   #addSpace {
     width: .5em; 
     display: inline-block;
+  }
+
+  #scoreboard {
+    margin-top: .8em;
+    margin-left: 2.5em;
+    height: 1.25em;
+    width: 16em;
+    background: rgba(83, 172, 86, 0.75);
+
+  }
+
+  .hideScore {
+    visibility: hidden;
+  }
+
+  .score {
+    display: inline-block;
+    width: 32%;
+    height: 1.4em;
+    margin-top: .65em;
   }
   
  #background {

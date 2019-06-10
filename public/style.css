@@ -28,7 +28,17 @@ html {
             border-radius: 1em;
     border: 1px solid white;
   }
+
+  /* .title-div {
+    margin: auto;
+    margin-top: 1.875em; 
+    line-height: 0;
+    border: 1px solid #404040;
+    background-color: #666;
+    width: 31em;    
+  } */
   
+  /* formerly h1 */
   h1 {
     position: relative;
     font-size: 4em;
@@ -38,7 +48,54 @@ html {
     text-shadow: 2px 0 2px lime;
     z-index: 2;
   }
-  
+
+  .msg-div-style {
+    position: absolute;
+    margin-top: -4.5em;
+    margin-left: 2em;
+    width: 27em;
+    height: 4em;
+    line-height: 0;
+    /* border: 1px solid #404040; */
+    background-color: #666;
+    /* z-index:3; */
+    visibility: hidden;
+    /* border: initial; */
+  }
+
+
+  .msg-style {
+    margin-top: 1.25em;
+    font-size: 1.5em;
+    text-decoration: initial;
+    text-shadow: initial;
+    /* color: rgb(247, 251, 5); */
+    color: yellow;
+  }
+
+  .unhide-msg-div {
+    visibility: visible;
+    z-index: 3;
+  }
+
+  .animate {
+    -webkit-animation-name: fade;
+    -webkit-animation-duration: 2s;
+    animation-name: fade;
+    animation-duration: 2s;
+  }
+  /* Safari 4.0 - 8.0 */
+@-webkit-keyframes example {
+  from {opacity: .9;}
+  to {opacity: 0;}
+}
+
+/* Standard syntax */
+@keyframes example {
+  from {opacity:.9;}
+  to {opacity: 0;}
+}
+
  #selectPlayer {
     position: relative;
     line-height: 0;
@@ -162,6 +219,7 @@ html {
     color: lime;
     text-shadow: 2px 0px 2px white;
   }
+
 
   @media screen and ( min-height: 1081px ) {
     body {

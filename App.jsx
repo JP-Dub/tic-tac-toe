@@ -1,4 +1,6 @@
 import React, { Component } from 'react';
+//import './public/style.css';
+//console.log(styles)
 //export default ...
 
 // winning combos
@@ -23,7 +25,8 @@ export class App extends Component{
         computer   : '',
         unpauseCpu : false,
         playsFirst : true,
-        preventClicks: false,     
+        preventClicks: false,
+        message: ''     
       }
 
     }
@@ -145,17 +148,42 @@ export class App extends Component{
           this.state.unpauseCpu = true;
           this.gameHandler(player, parseInt(event.target.id))
         } else if (!player) {
-          alert('Select "X" or "O" to start game'); // convert #title header to message board via created error function
+          this.messageHandler('Select "X" or "O" to start game')// move outside of prevent clicks??
+          //alert('Select "X" or "O" to start game'); // convert #title header to message board via created error function
         } else {
-          alert('That space has already been played!');
+          this.messageHandler('That space has already been played!')
+          //alert('That space has already been played!');
         }
       }
       
     }
 
     // handle error messages
-    errorHandler() {
+    messageHandler(msg) {
+      console.log(msg)
+      let div    = document.getElementById('msg-div'),
+          status = document.getElementById('status-messages');
+          // //this.divStyle = {'visibility' : 'visible',
+          //                   'zIndex': '3'}
+          div.classList.add('unhide-msg-div');
+          status.classList.add('animate')
+          this.setState( state => {
+            return {message: state.message = msg}
+          })
+      let opacity = 10;
 
+      let fader = setInterval(() => {
+        //console.log(opacity)
+        if(opacity ===  0) {
+          //this.divStyle =  {'visibility': 'hidden'}
+          div.classList.remove('unhide-msg-div');
+          status.classList.remove('animate')
+          return clearInterval(fader);
+        }
+        opacity--;
+        //status[0].setAttribute('opacity', '.' + opacity)
+        //this.messageStyle = {'opacity': '.' + opacity}
+      },200);
     }
     
     // handle cpu and player movements 
@@ -442,10 +470,12 @@ export class App extends Component{
     }
     
     render() {
+      
       return (
         <ErrorBoundary>
           <div id='title'>
-            <h1>Tic Tac Toe</h1>
+            <h1 id='tic-tac-toe'>Tic Tac Toe</h1>
+            <div id='msg-div' className='msg-div-style'><h1 id='status-messages' className='msg-style'>{this.state.message}</h1></div>
           </div>
           <div id='selectPlayer'>
             <p>Please Select "X" or "O"</p>
@@ -457,6 +487,7 @@ export class App extends Component{
             <div id='t' className='score'>Tie:<span id='tie'>{this.state.tie}</span></div>     
             <div id='l' className='score'>Lose:<span id='lose'>{this.state.lose}</span></div>
           </div>
+          
          </div> 
          <Gameboard clickHandler={this.clickHandler}/>
         </ErrorBoundary>

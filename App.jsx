@@ -166,22 +166,19 @@ export class App extends Component{
           // //this.divStyle = {'visibility' : 'visible',
           //                   'zIndex': '3'}
           div.classList.add('unhide-msg-div');
-          status.classList.add('animate')
+          
           this.setState( state => {
             return {message: state.message = msg}
           })
       let opacity = 10;
 
       let fader = setInterval(() => {
-        //console.log(opacity)
         if(opacity ===  0) {
-          //this.divStyle =  {'visibility': 'hidden'}
           div.classList.remove('unhide-msg-div');
-          status.classList.remove('animate')
           return clearInterval(fader);
         }
         opacity--;
-        //status[0].setAttribute('opacity', '.' + opacity)
+        status.style.opacity = '.' + opacity
         //this.messageStyle = {'opacity': '.' + opacity}
       },200);
     }

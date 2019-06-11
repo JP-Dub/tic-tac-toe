@@ -103,9 +103,7 @@ export class App extends Component{
     // select 'X' or 'O' to start game
     selectPlayer(icon) {
       icon.preventDefault();
-      console.log({'playsFirst': this.state.playsFirst,
-                   'preventClicks': this.state.preventClicks})
-      //let click = icon.target.innerHTML;
+      let playsFirst = this.state.playsFirst;
 
       arr.map( item => clone.push(item.slice()));
 
@@ -125,10 +123,13 @@ export class App extends Component{
           return clearInterval(this.endAnimate);
         }
         size -= .05;
-      }, 8);     
+      }, 8);
+      
+      let msg = !playsFirst ? 'The computer will play first.' : `You're playing first.`;
+      this.messageHandler(msg)
       
       // used if player loses game computer will go first
-      if(!this.state.playsFirst) {
+      if(!playsFirst) {
         setTimeout(() => {
           this.cpuHandler();
         }, 800);
@@ -139,14 +140,17 @@ export class App extends Component{
     clickHandler(evt) {
       evt.preventDefault();
 
-      if(!this.state.preventClicks) {
+     // if(!this.state.preventClicks) {
         let player = this.state.player;
         
         if( player && !evt.target.innerHTML ) {
-          this.id = document.getElementById(evt.target.id);
-          this.id.innerHTML = player;
-          this.state.unpauseCpu = true;
-          this.gameHandler(player, parseInt(event.target.id))
+          if(!this.state.preventClicks) {
+            //let player = this.state.player;
+            this.id = document.getElementById(evt.target.id);
+            this.id.innerHTML = player;
+            this.state.unpauseCpu = true;
+            this.gameHandler(player, parseInt(event.target.id))
+          }
         } else if (!player) {
           this.messageHandler('Select "X" or "O" to start game')// move outside of prevent clicks??
           //alert('Select "X" or "O" to start game'); // convert #title header to message board via created error function
@@ -154,33 +158,37 @@ export class App extends Component{
           this.messageHandler('That space has already been played!')
           //alert('That space has already been played!');
         }
-      }
+     // }
       
     }
 
-    // handle error messages
+    // handle messages
     messageHandler(msg) {
-      console.log(msg)
+
       let div    = document.getElementById('msg-div'),
           status = document.getElementById('status-messages');
-          // //this.divStyle = {'visibility' : 'visible',
-          //                   'zIndex': '3'}
+
           div.classList.add('unhide-msg-div');
           
           this.setState( state => {
             return {message: state.message = msg}
-          })
-      let opacity = 10;
+          });
 
-      let fader = setInterval(() => {
-        if(opacity ===  0) {
-          div.classList.remove('unhide-msg-div');
-          return clearInterval(fader);
-        }
-        opacity--;
-        status.style.opacity = '.' + opacity
-        //this.messageStyle = {'opacity': '.' + opacity}
-      },200);
+      let opacity = 10;
+      setTimeout( () => { 
+        let fader = setInterval(() => {
+          
+          if(opacity ===  0) {
+            div.classList.remove('unhide-msg-div');
+            status.style.opacity = 1;
+            return clearInterval(fader);
+          }
+
+          opacity--;
+          status.style.opacity = '.' + opacity;       
+
+        }, 50);
+      }, 1500);
     }
     
     // handle cpu and player movements 
@@ -239,6 +247,7 @@ export class App extends Component{
         // alerts the game is won - reset board
         if(count === 3 || compCount === 3) {
           let winnerPlaysFirst = this.state.player === logPlayer ? true : false;
+          this.messageHandler('You won!')
           return this.highlightWin(arr[a], () => {
             winnerPlaysFirst ? this.setState( state => {return {win: state.win + 1}}) 
                              : this.setState( state => {return {lose: state.lose + 1}})                         
@@ -265,7 +274,7 @@ export class App extends Component{
         this.createBoard.Init();
         
         let first = this.state.playsFirst === true ? false : true;   
-        
+        this.messageHandler(`It's a tie.`)
         return this.highlightTie('on', () => {
           setTimeout(() => {
             this.highlightTie('off');
@@ -472,7 +481,10 @@ export class App extends Component{
         <ErrorBoundary>
           <div id='title'>
             <h1 id='tic-tac-toe'>Tic Tac Toe</h1>
-            <div id='msg-div' className='msg-div-style'><h1 id='status-messages' className='msg-style'>{this.state.message}</h1></div>
+            <div id='msg-div' className='msg-div-style'>
+              <h1 id='status-messages' className='msg-style' 
+                  dangerouslySetInnerHTML={{__html: this.state.message}} />
+            </div>
           </div>
           <div id='selectPlayer'>
             <p>Please Select "X" or "O"</p>

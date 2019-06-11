@@ -3,5 +3,4 @@ const React    = require('react'),
       //App      = require('./App.jsx').default;
       import {App} from './App.jsx';
 
-
 ReactDOM.render(<App/>, document.getElementById('app'));

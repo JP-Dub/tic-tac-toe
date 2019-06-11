@@ -1,7 +1,4 @@
 import React, { Component } from 'react';
-//import './public/style.css';
-//console.log(styles)
-//export default ...
 
 // winning combos
 const [clone, arr] = [ [],
@@ -10,6 +7,7 @@ const [clone, arr] = [ [],
         [1,5,9], [3,5,7], ],
       ];     
 
+// main React Component      
 export class App extends Component{
    constructor(props) {
       super(props);
@@ -90,7 +88,7 @@ export class App extends Component{
       this.createBoard.Init();      
     }
 
-    componentDidUpdate(prevProps, prevState, snapshot) {
+    componentDidUpdate() {
       return this.state
     }
   
@@ -126,7 +124,7 @@ export class App extends Component{
       }, 8);
       
       let msg = !playsFirst ? 'The computer will play first.' : `You're playing first.`;
-      this.messageHandler(msg)
+      this.messageHandler(msg);
       
       // used if player loses game computer will go first
       if(!playsFirst) {
@@ -174,6 +172,7 @@ export class App extends Component{
             return {message: state.message = msg}
           });
 
+      // set message display time and then fade out;    
       let opacity = 10;
       setTimeout( () => { 
         let fader = setInterval(() => {
@@ -293,35 +292,6 @@ export class App extends Component{
       }
 
     }
-
-    // highlight all tiles for a tie
-    highlightTie(engage, next) {
-      for(let i = 1; i < 10; i++) {
-        let doc = document.getElementById(i);
-        if(engage === 'on') doc.classList.add('flash');
-        if(engage === 'off') doc.classList.remove('flash'); 
-      }
-      if(engage === 'on') return next();
-    }
-
-    // flash winning tile column
-    highlightWin(combo, next){
-      let count = 0;
-
-      let flash = setInterval( () => {
-        if(count === 6) {
-          clearInterval(flash);
-          return next();
-        }
-        
-        for(let i = 0; i < combo.length; i++) {
-          let doc = document.getElementById(combo[i]);        
-          count % 2 ? doc.classList.add('flash') 
-                    : doc.classList.remove('flash');
-        }
-        count++;
-      }, 500);
-    }
     
     // handle cpu response to player 
     cpuHandler() {
@@ -402,8 +372,6 @@ export class App extends Component{
           }
         };     
 
-        console.log('forecast', forecast, win, block)
-
         if(win) {
           return {
             results : win,
@@ -413,7 +381,6 @@ export class App extends Component{
 
         // determin if strategy being set up - will only run once
         if(forecast.threat) { 
-          console.log('assess threat')
           forecast.threat = false;
           let threat = strategy();      
           if(threat && !data[threat]) {      
@@ -430,42 +397,32 @@ export class App extends Component{
           }
         }  
 
-        // if all else fails, return random number from remain arr
+        // if all else fails, return random number from remains arr
         return {
           results: remains[random(remains.length)],
           type: 'random',
         };
       };
-   
+
       //logical operations for computer to play based on the first few plays
       switch (played.length) {
         case 0:
-          // if cpu starts game  
-          console.log('computer first move')      
+          // if cpu starts game 
+          corner.push(5);     
           num = corner[random(corner.length)];
           break; 
 
         case 1:
-          // if cpu doesn't start game: play corner if 5 is already played
-          let temp = [];         
-          if(data['5']) {
-            for(let i = 2; i < 10; i+=2) {
-              if(!data[i]) temp.push(i);
-              num = temp[random(temp.length)];
-            }
-          } else {
-            num = 5;
-          }
+          // if cpu doesn't start game: play corner
+          num = data['5'] ? corner[random(corner.length)] : 5;
           break;         
           
         default:
           num = checkDefense(this.state.player);         
           break;
-      }
-
-      console.log('cpuHandler return', num)   
+      } 
       
-      // num returns both number and object, check for which is being returned
+      // num returns both integer and object, check for which is being returned
       if(typeof num === 'object') {
         num = num.results;
       }
@@ -474,6 +431,35 @@ export class App extends Component{
       this.state.unpauseCpu = false;
       this.gameHandler(this.state.computer, num)
     }
+
+    // highlight all tiles for a tie
+    highlightTie(engage, next) {
+      for(let i = 1; i < 10; i++) {
+        let doc = document.getElementById(i);
+        if(engage === 'on') doc.classList.add('flash');
+        if(engage === 'off') doc.classList.remove('flash'); 
+      }
+      if(engage === 'on') return next();
+    }
+
+    // flash winning tile column
+    highlightWin(combo, next){
+      let count = 0;
+
+      let flash = setInterval( () => {
+        if(count === 6) {
+          clearInterval(flash);
+          return next();
+        }
+        
+        for(let i = 0; i < combo.length; i++) {
+          let doc = document.getElementById(combo[i]);        
+          count % 2 ? doc.classList.add('flash') 
+                    : doc.classList.remove('flash');
+        }
+        count++;
+      }, 500);
+    }    
     
     render() {
       
@@ -492,11 +478,10 @@ export class App extends Component{
             <span id='addSpace' />
             <button id="o" onClick={this.selectPlayer}>O</button>
             <div id='scoreboard'>
-            <div id='w' className='score'>Win:<span id='win'>{this.state.win}</span></div>
-            <div id='t' className='score'>Tie:<span id='tie'>{this.state.tie}</span></div>     
-            <div id='l' className='score'>Lose:<span id='lose'>{this.state.lose}</span></div>
-          </div>
-          
+            <div className='score'>Win:<span  id='win'>{this.state.win}</span></div>
+            <div className='score'>Tie:<span  id='tie'>{this.state.tie}</span></div>     
+            <div className='score'>Lose:<span id='lose'>{this.state.lose}</span></div>
+          </div>         
          </div> 
          <Gameboard clickHandler={this.clickHandler}/>
         </ErrorBoundary>

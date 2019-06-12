@@ -2,7 +2,7 @@
   "name": "reactapp",
   "version": "1.0.0",
   "description": "reactApp",
-  "main": "/main.jsx",
+  "main": "/main.js",
   "scripts": {
     "start": "webpack-dev-server --mode development --open --hot",
     "build": "webpack --mode production"

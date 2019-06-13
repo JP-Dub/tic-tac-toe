@@ -7,8 +7,8 @@ const [clone, arr] = [ [],
         [1,5,9], [3,5,7], ],
       ];     
 
-// main React Component      
-export class App extends Component{
+// main React Component  
+export default class App extends Component{
    constructor(props) {
       super(props);
 

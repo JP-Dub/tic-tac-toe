@@ -246,7 +246,7 @@ export default class App extends Component{
         // alerts the game is won - reset board
         if(count === 3 || compCount === 3) {
           let winnerPlaysFirst = this.state.player === logPlayer ? true : false;
-          this.messageHandler('You won!')
+          this.messageHandler(winnerPlaysFirst? 'You won!' : 'You lost!')
           return this.highlightWin(arr[a], () => {
             winnerPlaysFirst ? this.setState( state => {return {win: state.win + 1}}) 
                              : this.setState( state => {return {lose: state.lose + 1}})                         
